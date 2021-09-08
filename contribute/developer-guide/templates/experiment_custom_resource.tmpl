@@ -1,0 +1,56 @@
+apiVersion: litmuschaos.io/v1alpha1
+description:
+  message: |
+    {{ .Description }}
+kind: ChaosExperiment
+metadata:
+  name: {{ .Name }}
+  labels:
+    name: {{ .Name }}
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/component: chaosexperiment
+    app.kubernetes.io/version: latest
+spec:
+  definition:
+    scope: {{ .Scope }}
+    permissions: 
+      {{- range .Permissions }}
+      - apiGroups:
+        {{- range .APIGroups }} 
+          - "{{ . }}"
+        {{- end}}
+        resources:
+        {{- range .Resources }} 
+          - "{{ . }}"
+        {{- end}}
+        verbs:
+        {{- range .Verbs }} 
+          - "{{ . }}"
+        {{- end}}
+      {{- end}}
+    image: "litmuschaos/go-runner:latest"
+    imagePullPolicy: Always
+    args:
+    - -c
+    - ./experiments -name {{ .Name }}
+    command:
+    - /bin/bash
+    env:
+
+    - name: TOTAL_CHAOS_DURATION
+      value: '' 
+
+    - name: CHAOS_INTERVAL
+      value: ''
+
+    - name: LIB
+      value: ''
+
+    - name: RAMP_TIME
+      value: ''
+      
+    labels:
+      name: {{ .Name }}
+      app.kubernetes.io/part-of: litmus
+      app.kubernetes.io/component: experiment-job
+      app.kubernetes.io/version: latest 
