@@ -15,11 +15,11 @@ import (
 
 //GetENV fetches all the env variables from the runner pod
 func GetENV(experimentDetails *experimentTypes.ExperimentDetails) {
-	experimentDetails.ExperimentName = common.Getenv("EXPERIMENT_NAME", "")
+	experimentDetails.ExperimentName = common.Getenv("EXPERIMENT_NAME", "vmware-service-kill")
 	experimentDetails.ChaosNamespace = common.Getenv("CHAOS_NAMESPACE", "litmus")
 	experimentDetails.EngineName = common.Getenv("CHAOSENGINE", "")
 	experimentDetails.ChaosDuration, _ = strconv.Atoi(common.Getenv("TOTAL_CHAOS_DURATION", "30"))
-	experimentDetails.ChaosInterval, _ = strconv.Atoi(common.Getenv("CHAOS_INTERVAL", "10"))
+	experimentDetails.ChaosInterval, _ = strconv.Atoi(common.Getenv("CHAOS_INTERVAL", "30"))
 	experimentDetails.RampTime, _ = strconv.Atoi(common.Getenv("RAMP_TIME", "0"))
 	experimentDetails.ChaosLib = common.Getenv("LIB", "litmus")
 	experimentDetails.AppNS = common.Getenv("APP_NAMESPACE", "")
@@ -31,23 +31,21 @@ func GetENV(experimentDetails *experimentTypes.ExperimentDetails) {
 	experimentDetails.ChaosPodName = common.Getenv("POD_NAME", "")
 	experimentDetails.Delay, _ = strconv.Atoi(common.Getenv("STATUS_CHECK_DELAY", "2"))
 	experimentDetails.Timeout, _ = strconv.Atoi(common.Getenv("STATUS_CHECK_TIMEOUT", "180"))
-	experimentDetails.ChaosInjectCmd = common.Getenv("CHAOS_INJECT_COMMAND", "")
-	experimentDetails.ChaosKillCmd = common.Getenv("CHAOS_KILL_COMMAND", "")
 	experimentDetails.TargetContainer = common.Getenv("TARGET_CONTAINER", "")
-	experimentDetails.TargetPods = common.Getenv("TARGET_PODS", "")
-	experimentDetails.PodsAffectedPerc, _ = strconv.Atoi(common.Getenv("PODS_AFFECTED_PERC", "0"))
+	experimentDetails.Sequence = common.Getenv("SEQUENCE", "parallel")
+	experimentDetails.VMName = common.Getenv("VM_NAME", "")
+	experimentDetails.Datacenter = common.Getenv("DATACENTER", "")
+	experimentDetails.VMUserName = common.Getenv("VM_USER_NAME", "")
+	experimentDetails.VMPassword = common.Getenv("VM_PASSWORD", "")
+	experimentDetails.ServiceNames = common.Getenv("SERVICE_NAMES", "")
+	experimentDetails.SelfHealingServices = common.Getenv("SELF_HEALING_SERVICES", "false")
+	experimentDetails.VcenterServer = common.Getenv("VCENTERSERVER", "")
+	experimentDetails.VcenterUser = common.Getenv("VCENTERUSER", "")
+	experimentDetails.VcenterPass = common.Getenv("VCENTERPASS", "")
 }
 
 //InitialiseChaosVariables initialise all the global variables
 func InitialiseChaosVariables(chaosDetails *types.ChaosDetails, experimentDetails *experimentTypes.ExperimentDetails) {
-	appDetails := types.AppDetails{}
-	appDetails.AnnotationCheck, _ = strconv.ParseBool(common.Getenv("ANNOTATION_CHECK", "false"))
-	appDetails.AnnotationKey = common.Getenv("ANNOTATION_KEY", "litmuschaos.io/chaos")
-	appDetails.AnnotationValue = "true"
-	appDetails.Kind = experimentDetails.AppKind
-	appDetails.Label = experimentDetails.AppLabel
-	appDetails.Namespace = experimentDetails.AppNS
-
 	chaosDetails.ChaosNamespace = experimentDetails.ChaosNamespace
 	chaosDetails.ChaosPodName = experimentDetails.ChaosPodName
 	chaosDetails.ChaosUID = experimentDetails.ChaosUID
@@ -56,7 +54,4 @@ func InitialiseChaosVariables(chaosDetails *types.ChaosDetails, experimentDetail
 	chaosDetails.InstanceID = experimentDetails.InstanceID
 	chaosDetails.Timeout = experimentDetails.Timeout
 	chaosDetails.Delay = experimentDetails.Delay
-	chaosDetails.AppDetail = appDetails
-	chaosDetails.JobCleanupPolicy = common.Getenv("JOB_CLEANUP_POLICY", "retain")
-	chaosDetails.ProbeImagePullPolicy = experimentDetails.LIBImagePullPolicy
 }
