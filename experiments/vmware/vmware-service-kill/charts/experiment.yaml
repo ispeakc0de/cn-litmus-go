@@ -1,0 +1,64 @@
+apiVersion: litmuschaos.io/v1alpha1
+description:
+  message: |
+    VMWare Service Kill experiment kills given service(s) running on a Linux VM for a specified chaos interval before restarting it. It also validates the self-healing behavior of the services, if specified.
+kind: ChaosExperiment
+metadata:
+  name: vmware-service-kill
+  labels:
+    name: vmware-service-kill
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/component: chaosexperiment
+    app.kubernetes.io/version: latest
+spec:
+  definition:
+    scope: Namespaced
+    permissions:
+      - apiGroups: 
+          - "" 
+          - "batch" 
+          - "apps" 
+          - "litmuschaos.io"
+        resources: 
+          - "jobs" 
+          - "pods" 
+          - "pods/log" 
+          - "events" 
+          - "deployments" 
+          - "pods/exec" 
+          - "chaosengines" 
+          - "chaosexperiments" 
+          - "chaosresults"
+        verbs: 
+          - "create" 
+          - "list" 
+          - "get" 
+          - "patch" 
+          - "update" 
+          - "delete"
+    image: "litmuschaos/go-runner:latest"
+    imagePullPolicy: Always
+    args:
+    - -c
+    - ./experiments -name vmware-service-kill
+    command:
+    - /bin/bash
+    env:
+
+    - name: TOTAL_CHAOS_DURATION
+      value: '' 
+
+    - name: CHAOS_INTERVAL
+      value: ''
+
+    - name: LIB
+      value: ''
+
+    - name: RAMP_TIME
+      value: ''
+      
+    labels:
+      name: vmware-service-kill
+      app.kubernetes.io/part-of: litmus
+      app.kubernetes.io/component: experiment-job
+      app.kubernetes.io/version: latest 
