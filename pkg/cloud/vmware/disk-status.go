@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	vmwareLib "github.com/litmuschaos/litmus-go/pkg/cloud/vmware"
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/litmuschaos/litmus-go/pkg/utils/retry"
 	"github.com/pkg/errors"
@@ -96,7 +97,7 @@ func GetDiskState(vcenterServer, appVMMoid, diskId, cookie string) (string, erro
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		var errorResponse ErrorResponse
+		var errorResponse vmwareLib.ErrorResponse
 
 		json.Unmarshal(body, &errorResponse)
 

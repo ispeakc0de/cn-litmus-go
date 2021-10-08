@@ -7,14 +7,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
+	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-disk-loss/types"
 	"github.com/litmuschaos/litmus-go/pkg/clients"
-	"github.com/litmuschaos/litmus-go/pkg/cloud/vmware"
 	"github.com/litmuschaos/litmus-go/pkg/events"
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/litmuschaos/litmus-go/pkg/probe"
 	"github.com/litmuschaos/litmus-go/pkg/types"
 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
-	experimentTypes "github.com/litmuschaos/litmus-go/pkg/vmware/vmware-disk-loss/types"
 	"github.com/pkg/errors"
 )
 

@@ -5,9 +5,9 @@ import (
 
 	clientTypes "k8s.io/apimachinery/pkg/types"
 
+	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-disk-loss/types"
 	"github.com/litmuschaos/litmus-go/pkg/types"
 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
-	experimentTypes "github.com/litmuschaos/litmus-go/pkg/vmware/vmware-disk-loss/types"
 )
 
 //GetENV fetches all the env variables from the runner pod

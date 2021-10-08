@@ -11,7 +11,7 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 
-	vmwareDiskLoss "github.com/litmuschaos/litmus-go/experiments/vmware/vmware-disk-loss/experiment"
+	vmwareDiskLoss "github.com/chaosnative/litmus-go/experiments/vmware/vmware-disk-loss/experiment"
 
 	"github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/log"

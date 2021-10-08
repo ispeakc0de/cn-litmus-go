@@ -1,10 +1,13 @@
 package experiment
 
 import (
+	litmusLIB "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-disk-loss/lib"
+	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
+	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-disk-loss/environment"
+	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-disk-loss/types"
 	"github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
-	litmusLIB "github.com/litmuschaos/litmus-go/chaoslib/litmus/vmware-disk-loss/lib"
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
-	"github.com/litmuschaos/litmus-go/pkg/cloud/vmware"
+	vmwareLib "github.com/litmuschaos/litmus-go/pkg/cloud/vmware"
 	"github.com/litmuschaos/litmus-go/pkg/events"
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/litmuschaos/litmus-go/pkg/probe"
@@ -12,8 +15,6 @@ import (
 	"github.com/litmuschaos/litmus-go/pkg/status"
 	"github.com/litmuschaos/litmus-go/pkg/types"
 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
-	experimentEnv "github.com/litmuschaos/litmus-go/pkg/vmware/vmware-disk-loss/environment"
-	experimentTypes "github.com/litmuschaos/litmus-go/pkg/vmware/vmware-disk-loss/types"
 	"github.com/sirupsen/logrus"
 )
 
@@ -76,7 +77,7 @@ func VMWareDiskLoss(clients clients.ClientSets) {
 	})
 
 	// GET SESSION ID TO LOGIN TO VCENTER
-	cookie, err := vmware.GetVcenterSessionID(experimentsDetails.VcenterServer, experimentsDetails.VcenterUser, experimentsDetails.VcenterPass)
+	cookie, err := vmwareLib.GetVcenterSessionID(experimentsDetails.VcenterServer, experimentsDetails.VcenterUser, experimentsDetails.VcenterPass)
 	if err != nil {
 		failStep := "Unable to get Vcenter session ID"
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)

@@ -8,18 +8,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	vmwareLib "github.com/litmuschaos/litmus-go/pkg/cloud/vmware"
 	"github.com/litmuschaos/litmus-go/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
-
-type ErrorResponse struct {
-	MsgValue struct {
-		MsgMessages []struct {
-			MsgDefaultMessage string `json:"default_message"`
-		} `json:"messages"`
-	} `json:"value"`
-}
 
 // DiskDetach will detach a disk from a VM
 func DiskDetach(vcenterServer, appVMMoid, diskId, cookie string) error {
@@ -44,7 +37,7 @@ func DiskDetach(vcenterServer, appVMMoid, diskId, cookie string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		var errorResponse ErrorResponse
+		var errorResponse vmwareLib.ErrorResponse
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -97,7 +90,7 @@ func DiskAttach(vcenterServer, appVMMoid, diskPath, cookie string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		var errorResponse ErrorResponse
+		var errorResponse vmwareLib.ErrorResponse
 
 		json.Unmarshal(body, &errorResponse)
 
@@ -151,7 +144,7 @@ func GetDiskPath(vcenterServer, appVMMoid, diskId, cookie string) (string, error
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		var errorResponse ErrorResponse
+		var errorResponse vmwareLib.ErrorResponse
 
 		json.Unmarshal(body, &errorResponse)
 
