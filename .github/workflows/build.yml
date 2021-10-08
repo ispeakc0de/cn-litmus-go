@@ -67,7 +67,7 @@ jobs:
           push: false
           file: build/Dockerfile
           platforms: linux/amd64,linux/arm64
-          tags: litmuschaos/go-runner:ci
+          tags: chaosnative/go-runner:ci
 
   trivy:
     needs: pre-checks
