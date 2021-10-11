@@ -309,6 +309,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 	return nil
 }
 
+// AbortWatcher will watching for the abort signal and revert the chaos
 func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, serviceNamesList []string, abort chan os.Signal, chaosDetails *types.ChaosDetails) {
 	<-abort
 
