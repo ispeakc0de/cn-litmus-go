@@ -1,121 +1,171 @@
 package lib
 
-// func injectChaos(experimentsDetails *experimentTypes.ExperimentDetails, podName string, clients clients.ClientSets) error {
-// 	// It will contains all the pod & container details required for exec command
-// 	execCommandDetails := litmusexec.PodDetails{}
-// 	command := []string{"/bin/sh", "-c", experimentsDetails.ChaosInjectCmd}
-// 	litmusexec.SetExecCommandAttributes(&execCommandDetails, podName, experimentsDetails.TargetContainer, experimentsDetails.AppNS)
-// 	_, err := litmusexec.Exec(&execCommandDetails, clients, command)
-// 	if err != nil {
-// 		return errors.Errorf("unable to run command inside target container, err: %v", err)
-// 	}
-// 	return nil
-// }
+import (
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 
-// func experimentExecution(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
+	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
+	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-service-kill/types"
+	"github.com/litmuschaos/litmus-go/pkg/clients"
+	"github.com/litmuschaos/litmus-go/pkg/log"
+	"github.com/litmuschaos/litmus-go/pkg/types"
+	"github.com/litmuschaos/litmus-go/pkg/utils/common"
+	"github.com/pkg/errors"
 
-// 	// Get the target pod details for the chaos execution
-// 	// if the target pod is not defined it will derive the random target pod list using pod affected percentage
-// 	targetPodList, err := common.GetPodList(experimentsDetails.TargetPods, experimentsDetails.PodsAffectedPerc, clients, chaosDetails)
-// 	if err != nil {
-// 		return err
-// 	}
+	serviceKillAndCheckModes "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-service-kill/lib/service-kill-and-check/lib"
+	serviceKillAndRestartModes "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-service-kill/lib/service-kill-and-restart/lib"
+)
 
-// 	podNames := []string{}
-// 	for _, pod := range targetPodList.Items {
-// 		podNames = append(podNames, pod.Name)
-// 	}
-// 	log.Infof("Target pods list for chaos, %v", podNames)
+var inject, abort chan os.Signal
 
-// 	//Get the target container name of the application pod
-// 	if experimentsDetails.TargetContainer == "" {
-// 		experimentsDetails.TargetContainer, err = common.GetTargetContainer(experimentsDetails.AppNS, targetPodList.Items[0].Name, clients)
-// 		if err != nil {
-// 			return errors.Errorf("unable to get the target container name, err: %v", err)
-// 		}
-// 	}
+// PrepareServiceKill facilitates the prepration and injection steps for the experiment as per the value of SelfHealingServices
+func PrepareServiceKill(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
 
-// 	return runChaos(experimentsDetails, targetPodList, clients, resultDetails, eventsDetails, chaosDetails)
-// }
+	switch experimentsDetails.SelfHealingServices {
+	case "true":
+		if err := serviceKillAndCheck(experimentsDetails, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
+			return err
+		}
+	case "false":
+		if err := serviceKillAndRestart(experimentsDetails, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("%s value is not supported for SELF_HEALING_SERVICES")
+	}
 
-// func runChaos(experimentsDetails *experimentTypes.ExperimentDetails, targetPodList corev1.PodList, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
-// 	var endTime <-chan time.Time
-// 	timeDelay := time.Duration(experimentsDetails.ChaosDuration) * time.Second
+	return nil
+}
 
-// 	for _, pod := range targetPodList.Items {
+func serviceKillAndCheck(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
 
-// 		if experimentsDetails.EngineName != "" {
-// 			msg := "Injecting " + experimentsDetails.ExperimentName + " chaos on " + pod.Name + " pod"
-// 			types.SetEngineEventAttributes(eventsDetails, types.ChaosInject, msg, "Normal", chaosDetails)
-// 			events.GenerateEvents(eventsDetails, clients, chaosDetails, "ChaosEngine")
-// 		}
+	//Waiting for the ramp time before chaos injection
+	if experimentsDetails.RampTime != 0 {
+		log.Infof("[Ramp]: Waiting for the %vs ramp time before injecting chaos", experimentsDetails.RampTime)
+		common.WaitForDuration(experimentsDetails.RampTime)
+	}
 
-// 		log.InfoWithValues("[Chaos]: The Target application details", logrus.Fields{
-// 			"container": experimentsDetails.TargetContainer,
-// 			"Pod":       pod.Name,
-// 		})
+	//get the service names list
+	serviceNamesList := strings.Split(experimentsDetails.ServiceNames, ",")
+	if len(serviceNamesList) == 0 {
+		return errors.Errorf("no service names found")
+	}
 
-// 		go injectChaos(experimentsDetails, pod.Name, clients)
+	switch strings.ToLower(experimentsDetails.Sequence) {
+	case "serial":
+		if err := serviceKillAndCheckModes.ServiceKillAndCheckSerialMode(experimentsDetails, serviceNamesList, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
+			return err
+		}
+	case "parallel":
+		if err := serviceKillAndCheckModes.ServiceKillAndCheckParallelMode(experimentsDetails, serviceNamesList, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
+			return err
+		}
+	default:
+		return errors.Errorf("%v sequence is not supported", experimentsDetails.Sequence)
+	}
 
-// 		log.Infof("[Chaos]:Waiting for: %vs", experimentsDetails.ChaosDuration)
+	//Waiting for the ramp time after chaos injection
+	if experimentsDetails.RampTime != 0 {
+		log.Infof("[Ramp]: Waiting for the %vs ramp time after injecting chaos", experimentsDetails.RampTime)
+		common.WaitForDuration(experimentsDetails.RampTime)
+	}
 
-// 		// signChan channel is used to transmit signal notifications.
-// 		signChan := make(chan os.Signal, 1)
-// 		// Catch and relay certain signal(s) to signChan channel.
-// 		signal.Notify(signChan, os.Interrupt, syscall.SIGTERM)
-// 	loop:
-// 		for {
-// 			endTime = time.After(timeDelay)
-// 			select {
-// 			case <-signChan:
-// 				log.Info("[Chaos]: Revert Started")
-// 				if err := killChaos(experimentsDetails, pod.Name, clients); err != nil {
-// 					log.Error("unable to kill chaos process after receiving abortion signal")
-// 				}
-// 				log.Info("[Chaos]: Revert Completed")
-// 				os.Exit(1)
-// 			case <-endTime:
-// 				log.Infof("[Chaos]: Time is up for experiment: %v", experimentsDetails.ExperimentName)
-// 				endTime = nil
-// 				break loop
-// 			}
-// 		}
-// 		if err := killChaos(experimentsDetails, pod.Name, clients); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+	return nil
+}
 
-// func PrepareChaos(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
+func serviceKillAndRestart(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
 
-// 	//Waiting for the ramp time before chaos injection
-// 	if experimentsDetails.RampTime != 0 {
-// 		log.Infof("[Ramp]: Waiting for the %vs ramp time before injecting chaos", experimentsDetails.RampTime)
-// 		common.WaitForDuration(experimentsDetails.RampTime)
-// 	}
-// 	//Starting the CPU stress experiment
-// 	if err := experimentExecution(experimentsDetails, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
-// 		return err
-// 	}
-// 	//Waiting for the ramp time after chaos injection
-// 	if experimentsDetails.RampTime != 0 {
-// 		log.Infof("[Ramp]: Waiting for the %vs ramp time after injecting chaos", experimentsDetails.RampTime)
-// 		common.WaitForDuration(experimentsDetails.RampTime)
-// 	}
-// 	return nil
-// }
+	// inject channel is used to transmit signal notifications.
+	inject = make(chan os.Signal, 1)
+	// Catch and relay certain signal(s) to inject channel.
+	signal.Notify(inject, os.Interrupt, syscall.SIGTERM)
 
-// func killChaos(experimentsDetails *experimentTypes.ExperimentDetails, podName string, clients clients.ClientSets) error {
-// 	// It will contains all the pod & container details required for exec command
-// 	execCommandDetails := litmusexec.PodDetails{}
+	// abort channel is used to transmit signal notifications.
+	abort = make(chan os.Signal, 1)
+	// Catch and relay certain signal(s) to abort channel.
+	signal.Notify(abort, os.Interrupt, syscall.SIGTERM)
 
-// 	command := []string{"/bin/sh", "-c", experimentsDetails.ChaosKillCmd}
+	//Waiting for the ramp time before chaos injection
+	if experimentsDetails.RampTime != 0 {
+		log.Infof("[Ramp]: Waiting for the %vs ramp time before injecting chaos", experimentsDetails.RampTime)
+		common.WaitForDuration(experimentsDetails.RampTime)
+	}
 
-// 	litmusexec.SetExecCommandAttributes(&execCommandDetails, podName, experimentsDetails.TargetContainer, experimentsDetails.AppNS)
-// 	_, err := litmusexec.Exec(&execCommandDetails, clients, command)
-// 	if err != nil {
-// 		return errors.Errorf("unable to kill the process in %v pod, err: %v", podName, err)
-// 	}
-// 	return nil
-// }
+	//get the service names list
+	serviceNamesList := strings.Split(experimentsDetails.ServiceNames, ",")
+	if len(serviceNamesList) == 0 {
+		return errors.Errorf("no service names found")
+	}
+
+	select {
+	case <-inject:
+		// stopping the chaos execution, if abort signal recieved
+		os.Exit(0)
+	default:
+
+		// watching for the abort signal and revert the chaos
+		go AbortWatcher(experimentsDetails, serviceNamesList, abort, chaosDetails)
+
+		switch strings.ToLower(experimentsDetails.Sequence) {
+		case "serial":
+			if err := serviceKillAndRestartModes.ServiceKillAndRestartSerialMode(experimentsDetails, serviceNamesList, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
+				return err
+			}
+		case "parallel":
+			if err := serviceKillAndRestartModes.ServiceKillAndRestartParallelMode(experimentsDetails, serviceNamesList, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
+				return err
+			}
+		default:
+			return errors.Errorf("%v sequence is not supported", experimentsDetails.Sequence)
+		}
+
+		//Waiting for the ramp time after chaos injection
+		if experimentsDetails.RampTime != 0 {
+			log.Infof("[Ramp]: Waiting for the %vs ramp time after injecting chaos", experimentsDetails.RampTime)
+			common.WaitForDuration(experimentsDetails.RampTime)
+		}
+	}
+
+	return nil
+}
+
+func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, serviceNamesList []string, abort chan os.Signal, chaosDetails *types.ChaosDetails) {
+	<-abort
+
+	log.Info("[Abort]: Chaos Revert Started")
+
+	for _, serviceName := range serviceNamesList {
+
+		// Getting the service state
+		serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+		if err != nil {
+			log.Errorf("failed to get the service state, %s", err.Error())
+		}
+
+		if serviceState != "active" {
+
+			//Wait for the service to completely stop
+			//We first wait for the service to get in inactive state then we are restarting it.
+			log.Infof("[Abort]: Wait for %s service to completely stop", serviceName)
+
+			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+				log.Errorf("unable to stop the service, err: %v", err)
+			}
+
+			//Starting the service
+			log.Infof("[Abort]: Starting the %s service", serviceName)
+
+			err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+			if err != nil {
+				log.Errorf("unable to start service %s during abort, %s", err)
+			}
+		}
+
+		common.SetTargets(serviceName, "reverted", "Service", chaosDetails)
+	}
+
+	log.Info("[Abort]: Chaos Revert Completed")
+	os.Exit(1)
+}
