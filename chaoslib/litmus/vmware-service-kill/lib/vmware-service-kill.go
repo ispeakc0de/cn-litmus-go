@@ -33,7 +33,7 @@ func PrepareServiceKill(experimentsDetails *experimentTypes.ExperimentDetails, c
 			return err
 		}
 	default:
-		return errors.Errorf("%s value is not supported for SELF_HEALING_SERVICES")
+		return errors.Errorf("%s value is not supported for SELF_HEALING_SERVICES", experimentsDetails.SelfHealingServices)
 	}
 
 	return nil
