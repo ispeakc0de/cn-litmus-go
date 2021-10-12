@@ -27,10 +27,10 @@ func GetService(serviceName, vmName, datacenter, vmUserName, vmPassword string) 
 
 	/*
 		The following command displays the names of all the service units that systemd has attempted to parse and load into memory,
-		in which we search for the given service name; stdout would always be of the format serviceName.service, if the service exists,
-		and hence it has been omitted. If the service is not found, it will result into an error.
+		in which we search for the given service name; if the service exists, stdout would always be of the format serviceName.service,
+		and hence it has been omitted, otherwise if the service is not found it will result into an error.
 	*/
-	command := fmt.Sprintf("govc guest.run -vm=%s -dc=%s -l=%s:%s systemctl list-unit-files --type service --no-page | awk '{print $1}' | grep %s.service", vmName, datacenter, vmUserName, vmPassword, serviceName)
+	command := fmt.Sprintf(`govc guest.run -vm=%s -dc=%s -l=%s:%s systemctl list-unit-files --type service --no-page | awk '{print $1}' | grep %s.service`, vmName, datacenter, vmUserName, vmPassword, serviceName)
 	_, stderr, err := Shellout(command)
 
 	if stderr != "" {
@@ -51,7 +51,7 @@ func GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword str
 		The following command lists the property ActiveState of a given service in the format ActiveState=property,
 		where 'property' can be any one of "active", "reloading", "inactive", "failed", "activating", and "deactivating".
 	*/
-	command := fmt.Sprintf("govc guest.run -vm=%s -dc=%s -l=%s:%s systemctl show %s -p ActiveState --no-page | sed 's/ActiveState=//g'", vmName, datacenter, vmUserName, vmPassword, serviceName)
+	command := fmt.Sprintf(`govc guest.run -vm=%s -dc=%s -l=%s:%s systemctl show %s -p ActiveState --no-page | sed 's/ActiveState=//g'`, vmName, datacenter, vmUserName, vmPassword, serviceName)
 	stdout, stderr, err := Shellout(command)
 
 	if stderr != "" {
@@ -91,7 +91,7 @@ func ServiceStateCheck(serviceNames, vmName, datacenter, vmUserName, vmPassword 
 	for _, serviceName := range serviceNameList {
 
 		if err := GetService(serviceName, vmName, datacenter, vmUserName, vmPassword); err != nil {
-			return errors.Errorf("%s service not found, %s", serviceName, err)
+			return errors.Errorf("unable to find %s service, %s", serviceName, err)
 		}
 
 		serviceState, err := GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword)
