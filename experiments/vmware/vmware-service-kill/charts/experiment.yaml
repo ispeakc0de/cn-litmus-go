@@ -45,6 +45,36 @@ spec:
     - /bin/bash
     env:
 
+    - name: VCENTERSERVER
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERSERVER
+
+    - name: VCENTERUSER
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERUSER
+
+    - name: VCENTERPASS
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERPASS
+
+    - name: VM_USER_NAME
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VM_USER_NAME
+
+    - name: VM_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VM_PASSWORD
+
     - name: TOTAL_CHAOS_DURATION
       value: '' 
 
@@ -56,7 +86,27 @@ spec:
 
     - name: RAMP_TIME
       value: ''
-      
+
+    # set chaos duration (in sec) as desired
+    - name: TOTAL_CHAOS_DURATION
+      value: '30'
+
+    # set chaos interval (in sec) as desired
+    - name: CHAOS_INTERVAL
+      value: '10'
+              
+    # set the VM name 
+    - name: VM_NAME
+      value: ''
+        
+    # set the target service names
+    - name: SERVICE_NAMES
+      value: ''
+
+    # true/false; set whether services start on their own or not, default is false
+    - name: SELF_HEALING_SERVICES
+      value: 'false'
+
     labels:
       name: vmware-service-kill
       app.kubernetes.io/part-of: litmus

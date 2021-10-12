@@ -3,10 +3,6 @@ kind: ChaosEngine
 metadata:
   name: nginx-chaos
 spec:
-  appinfo:
-    appns: 'default'
-    applabel: 'app=nginx'
-    appkind: 'deployment'
   # It can be active/stop
   engineState: 'active'
   #ex. values: ns1:name=percona,ns2:run=nginx
@@ -27,3 +23,15 @@ spec:
             - name: CHAOS_INTERVAL
               value: '10'
               
+            # set the VM name 
+            - name: VM_NAME
+              value: ''
+            
+            # set the target service names
+            - name: SERVICE_NAMES
+              value: ''
+
+            # true/false; set whether services start on their own or not, default is false
+            - name: SELF_HEALING_SERVICES
+              value: ''
+            
