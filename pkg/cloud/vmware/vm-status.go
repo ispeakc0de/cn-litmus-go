@@ -7,6 +7,27 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GetVM checks if a given vm exists or not
+func GetVM(vmName string) error {
+
+	command := fmt.Sprintf(`govc vm.info -json %s`, vmName)
+	stdout, stderr, err := Shellout(command)
+
+	if stderr != "" {
+		return errors.Errorf("%s", stderr)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if stdout == "" {
+		return errors.Errorf("vm not found")
+	}
+
+	return nil
+}
+
 // GetVMStatus returns the connection state and power state of a given VM
 func GetVMState(vmName string) (string, string, error) {
 
