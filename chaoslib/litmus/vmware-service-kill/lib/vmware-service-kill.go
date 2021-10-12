@@ -320,7 +320,7 @@ func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, service
 		// Getting the service state
 		serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 		if err != nil {
-			log.Errorf("failed to get the service state, %s", err.Error())
+			log.Errorf("failed to get %s service state, %s", serviceName, err.Error())
 		}
 
 		if serviceState != "active" {
@@ -330,15 +330,15 @@ func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, service
 			log.Infof("[Abort]: Wait for %s service to completely stop", serviceName)
 
 			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
-				log.Errorf("unable to stop the service, err: %v", err)
+				log.Errorf("unable to stop %s service, err: %v", serviceName, err)
 			}
 
 			//Starting the service
-			log.Infof("[Abort]: Starting the %s service", serviceName)
+			log.Infof("[Abort]: Starting %s service", serviceName)
 
 			err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 			if err != nil {
-				log.Errorf("unable to start service %s during abort, %s", err)
+				log.Errorf("unable to start %s service during abort, %s", err)
 			}
 		}
 
