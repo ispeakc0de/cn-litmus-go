@@ -119,7 +119,7 @@ func ServiceStateCheck(serviceNames, vmName, vmUserName, vmPassword string) erro
 // WaitForServiceStop will wait for the service to completely stop
 func WaitForServiceStop(vcenterServer, vmName, serviceName, vmUserName, vmPassword string, delay, timeout int) error {
 
-	log.Infof("[Status]: Checking service %s status for stopping", serviceName)
+	log.Infof("[Status]: Checking %s service status for stopping", serviceName)
 	return retry.
 		Times(uint(timeout / delay)).
 		Wait(time.Duration(delay) * time.Second).
@@ -127,15 +127,15 @@ func WaitForServiceStop(vcenterServer, vmName, serviceName, vmUserName, vmPasswo
 
 			serviceState, err := GetServiceState(serviceName, vmName, vmUserName, vmPassword)
 			if err != nil {
-				return errors.Errorf("failed to get the service state")
+				return errors.Errorf("failed to get %s service state", serviceName)
 			}
 
 			if serviceState != "inactive" {
-				log.Infof("[Info]: The service state is %v", serviceState)
-				return errors.Errorf("service is not yet in inactive state")
+				log.Infof("[Info]: The service state is %s", serviceState)
+				return errors.Errorf("%s service is not yet in inactive state", serviceName)
 			}
 
-			log.Infof("[Info]: The service state is %v", serviceState)
+			log.Infof("[Info]: The service state is %s", serviceState)
 			return nil
 		})
 }
@@ -143,7 +143,7 @@ func WaitForServiceStop(vcenterServer, vmName, serviceName, vmUserName, vmPasswo
 // WaitForServiceStart will wait for the service to completely start
 func WaitForServiceStart(vcenterServer, vmName, serviceName, vmUserName, vmPassword string, delay, timeout int) error {
 
-	log.Infof("[Status]: Checking service %s status for stopping", serviceName)
+	log.Infof("[Status]: Checking %s service status for starting", serviceName)
 	return retry.
 		Times(uint(timeout / delay)).
 		Wait(time.Duration(delay) * time.Second).
@@ -151,15 +151,15 @@ func WaitForServiceStart(vcenterServer, vmName, serviceName, vmUserName, vmPassw
 
 			serviceState, err := GetServiceState(serviceName, vmName, vmUserName, vmPassword)
 			if err != nil {
-				return errors.Errorf("failed to get the service state")
+				return errors.Errorf("failed to get %s service state", serviceName)
 			}
 
 			if serviceState != "active" {
-				log.Infof("[Info]: The service state is %v", serviceState)
-				return errors.Errorf("service is not yet in inactive state")
+				log.Infof("[Info]: The service state is %s", serviceState)
+				return errors.Errorf("%s service is not yet in active state", serviceName)
 			}
 
-			log.Infof("[Info]: The service state is %v", serviceState)
+			log.Infof("[Info]: The service state is %s", serviceState)
 			return nil
 		})
 }
