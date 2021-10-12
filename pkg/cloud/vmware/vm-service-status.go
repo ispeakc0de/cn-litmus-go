@@ -88,6 +88,19 @@ func ServiceStateCheck(serviceNames, vmName, datacenter, vmUserName, vmPassword 
 		return errors.Errorf("vm username or password is missing")
 	}
 
+	connectionState, powerState, err := GetVMState(vmName)
+	if err != nil {
+		return errors.Errorf("unable to fetch vm state, %s", err)
+	}
+
+	if connectionState != "connected" {
+		return errors.Errorf("vm is not in connected state")
+	}
+
+	if powerState != "poweredOn" {
+		return errors.Errorf("vm is not in powered-on state")
+	}
+
 	for _, serviceName := range serviceNameList {
 
 		if err := GetService(serviceName, vmName, datacenter, vmUserName, vmPassword); err != nil {
