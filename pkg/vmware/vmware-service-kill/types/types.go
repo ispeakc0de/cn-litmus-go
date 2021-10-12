@@ -29,7 +29,6 @@ type ExperimentDetails struct {
 	LIBImagePullPolicy  string
 	Sequence            string
 	VMName              string
-	Datacenter          string
 	VMUserName          string
 	VMPassword          string
 	ServiceNames        string

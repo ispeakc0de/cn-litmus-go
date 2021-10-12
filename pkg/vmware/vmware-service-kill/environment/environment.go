@@ -34,7 +34,6 @@ func GetENV(experimentDetails *experimentTypes.ExperimentDetails) {
 	experimentDetails.TargetContainer = common.Getenv("TARGET_CONTAINER", "")
 	experimentDetails.Sequence = common.Getenv("SEQUENCE", "parallel")
 	experimentDetails.VMName = common.Getenv("VM_NAME", "")
-	experimentDetails.Datacenter = common.Getenv("DATACENTER", "")
 	experimentDetails.VMUserName = common.Getenv("VM_USER_NAME", "")
 	experimentDetails.VMPassword = common.Getenv("VM_PASSWORD", "")
 	experimentDetails.ServiceNames = common.Getenv("SERVICE_NAMES", "")

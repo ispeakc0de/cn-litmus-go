@@ -151,7 +151,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 
 			//Stopping the service
 			log.Infof("[Chaos]: Stopping %s service", serviceName)
-			if err := vmware.StopService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+			if err := vmware.StopService(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 				return errors.Errorf("unable to stop %s service, %s", serviceName, err)
 			}
 
@@ -159,7 +159,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 
 			//Wait for service to stop
 			log.Infof("[Wait]: Wait for %s service to stop", serviceName)
-			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 				return errors.Errorf("%s service failed to stop, %s", serviceName, err)
 			}
 
@@ -174,7 +174,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 
 				//Wait for service to start
 				log.Infof("[Wait]: Wait for %s service to start", serviceName)
-				if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+				if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 					return errors.Errorf("%s service failed to stop, %s", serviceName, err)
 				}
 			} else {
@@ -184,7 +184,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 				common.WaitForDuration(experimentsDetails.ChaosInterval)
 
 				// Get service state
-				serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+				serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 				if err != nil {
 					return errors.Errorf("failed to get %s service state, %s", serviceState, err)
 				}
@@ -195,13 +195,13 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 				default:
 					// Start the service
 					log.Infof("[Chaos]: Starting %s service", serviceName)
-					if err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+					if err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 
 					//Wait for service to start
 					log.Infof("[Wait]: Wait for %s service to start", serviceName)
-					if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+					if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 				}
@@ -235,7 +235,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 
 			//Stopping the service
 			log.Infof("[Chaos]: Stopping %s service", serviceName)
-			if err := vmware.StopService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+			if err := vmware.StopService(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 				return errors.Errorf("unable to stop %s service, %s", serviceName, err)
 			}
 
@@ -246,7 +246,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 
 			//Wait for service to stop
 			log.Infof("[Wait]: Wait for %s service to stop", serviceName)
-			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 				return errors.Errorf("%s service failed to stop, %s", serviceName, err)
 			}
 		}
@@ -263,7 +263,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 
 				//Wait for service to start
 				log.Infof("[Wait]: Wait for %s service to start", serviceName)
-				if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+				if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 					return errors.Errorf("%s service failed to stop, %s", serviceName, err)
 				}
 
@@ -277,7 +277,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 			for _, serviceName := range serviceNamesList {
 
 				// Get the service state
-				serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+				serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 				if err != nil {
 					return errors.Errorf("failed to get %s service state, %s", serviceState, err)
 				}
@@ -288,13 +288,13 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 				default:
 					// Start the service
 					log.Infof("[Chaos]: Starting %s service", serviceName)
-					if err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+					if err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 
 					//Wait for service to start
 					log.Infof("[Wait]: Wait for %s service to start", serviceName)
-					if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+					if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 				}
@@ -318,7 +318,7 @@ func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, service
 	for _, serviceName := range serviceNamesList {
 
 		// Getting the service state
-		serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+		serviceState, err := vmware.GetServiceState(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 		if err != nil {
 			log.Errorf("failed to get the service state, %s", err.Error())
 		}
@@ -329,14 +329,14 @@ func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, service
 			//We first wait for the service to get in inactive state then we are restarting it.
 			log.Infof("[Abort]: Wait for %s service to completely stop", serviceName)
 
-			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+			if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 				log.Errorf("unable to stop the service, err: %v", err)
 			}
 
 			//Starting the service
 			log.Infof("[Abort]: Starting the %s service", serviceName)
 
-			err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+			err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 			if err != nil {
 				log.Errorf("unable to start service %s during abort, %s", err)
 			}

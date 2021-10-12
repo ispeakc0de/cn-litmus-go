@@ -129,7 +129,7 @@ func VMWareServiceKill(clients clients.ClientSets) {
 	os.Setenv("GOVC_INSECURE", "true")
 
 	// Verify that the services exist on VM and are in an active state (pre-chaos)
-	if err := vmware.ServiceStateCheck(experimentsDetails.ServiceNames, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+	if err := vmware.ServiceStateCheck(experimentsDetails.ServiceNames, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 		log.Errorf("service state check failed pre chaos, err: %v", err)
 		failStep := "Verify the services are in correct state (pre-chaos)"
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
@@ -199,7 +199,7 @@ func VMWareServiceKill(clients clients.ClientSets) {
 	}
 
 	// Verify that the services are in an active state (post-chaos)
-	if err := vmware.ServiceStateCheck(experimentsDetails.ServiceNames, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+	if err := vmware.ServiceStateCheck(experimentsDetails.ServiceNames, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 		log.Errorf("service state check failed post chaos, err: %v", err)
 		failStep := "Verify the services are in correct state (post-chaos)"
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)

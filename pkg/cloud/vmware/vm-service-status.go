@@ -23,14 +23,14 @@ func Shellout(command string) (string, string, error) {
 }
 
 // GetService ensures that the given service exists on the given VM otherwise it returns an error
-func GetService(serviceName, vmName, datacenter, vmUserName, vmPassword string) error {
+func GetService(serviceName, vmName, vmUserName, vmPassword string) error {
 
 	/*
 		The following command displays the names of all the service units that systemd has attempted to parse and load into memory,
 		in which we search for the given service name; if the service exists, stdout would always be of the format serviceName.service,
 		and hence it has been omitted, otherwise if the service is not found it will result into an error.
 	*/
-	command := fmt.Sprintf(`govc guest.run -vm=%s -dc=%s -l=%s:%s systemctl list-unit-files --type service --no-page | awk '{print $1}' | grep %s.service`, vmName, datacenter, vmUserName, vmPassword, serviceName)
+	command := fmt.Sprintf(`govc guest.run -vm=%s -l=%s:%s systemctl list-unit-files --type service --no-page | awk '{print $1}' | grep %s.service`, vmName, vmUserName, vmPassword, serviceName)
 	_, stderr, err := Shellout(command)
 
 	if stderr != "" {
@@ -45,13 +45,13 @@ func GetService(serviceName, vmName, datacenter, vmUserName, vmPassword string) 
 }
 
 // GetServiceState returns the state of a given service
-func GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword string) (string, error) {
+func GetServiceState(serviceName, vmName, vmUserName, vmPassword string) (string, error) {
 
 	/*
 		The following command lists the property ActiveState of a given service in the format ActiveState=property,
 		where 'property' can be any one of "active", "reloading", "inactive", "failed", "activating", and "deactivating".
 	*/
-	command := fmt.Sprintf(`govc guest.run -vm=%s -dc=%s -l=%s:%s systemctl show %s -p ActiveState --no-page | sed 's/ActiveState=//g'`, vmName, datacenter, vmUserName, vmPassword, serviceName)
+	command := fmt.Sprintf(`govc guest.run -vm=%s -l=%s:%s systemctl show %s -p ActiveState --no-page | sed 's/ActiveState=//g'`, vmName, vmUserName, vmPassword, serviceName)
 	stdout, stderr, err := Shellout(command)
 
 	if stderr != "" {
@@ -69,7 +69,7 @@ func GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword str
 }
 
 // ServiceStateCheck checks if the services exist on the VM and are in an active state
-func ServiceStateCheck(serviceNames, vmName, datacenter, vmUserName, vmPassword string) error {
+func ServiceStateCheck(serviceNames, vmName, vmUserName, vmPassword string) error {
 
 	serviceNameList := strings.Split(serviceNames, ",")
 	if len(serviceNameList) == 0 {
@@ -78,10 +78,6 @@ func ServiceStateCheck(serviceNames, vmName, datacenter, vmUserName, vmPassword 
 
 	if vmName == "" {
 		return errors.Errorf("no vm name provided for the corresponding service names")
-	}
-
-	if datacenter == "" {
-		return errors.Errorf("no datacenter provided for the vm")
 	}
 
 	if vmUserName == "" || vmPassword == "" {
@@ -103,11 +99,11 @@ func ServiceStateCheck(serviceNames, vmName, datacenter, vmUserName, vmPassword 
 
 	for _, serviceName := range serviceNameList {
 
-		if err := GetService(serviceName, vmName, datacenter, vmUserName, vmPassword); err != nil {
+		if err := GetService(serviceName, vmName, vmUserName, vmPassword); err != nil {
 			return errors.Errorf("unable to find %s service, %s", serviceName, err)
 		}
 
-		serviceState, err := GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword)
+		serviceState, err := GetServiceState(serviceName, vmName, vmUserName, vmPassword)
 		if err != nil {
 			return errors.Errorf("failed to get %s service state", serviceName)
 		}
@@ -121,7 +117,7 @@ func ServiceStateCheck(serviceNames, vmName, datacenter, vmUserName, vmPassword 
 }
 
 // WaitForServiceStop will wait for the service to completely stop
-func WaitForServiceStop(vcenterServer, vmName, serviceName, datacenter, vmUserName, vmPassword string, delay, timeout int) error {
+func WaitForServiceStop(vcenterServer, vmName, serviceName, vmUserName, vmPassword string, delay, timeout int) error {
 
 	log.Infof("[Status]: Checking service %s status for stopping", serviceName)
 	return retry.
@@ -129,7 +125,7 @@ func WaitForServiceStop(vcenterServer, vmName, serviceName, datacenter, vmUserNa
 		Wait(time.Duration(delay) * time.Second).
 		Try(func(attempt uint) error {
 
-			serviceState, err := GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword)
+			serviceState, err := GetServiceState(serviceName, vmName, vmUserName, vmPassword)
 			if err != nil {
 				return errors.Errorf("failed to get the service state")
 			}
@@ -145,7 +141,7 @@ func WaitForServiceStop(vcenterServer, vmName, serviceName, datacenter, vmUserNa
 }
 
 // WaitForServiceStart will wait for the service to completely start
-func WaitForServiceStart(vcenterServer, vmName, serviceName, datacenter, vmUserName, vmPassword string, delay, timeout int) error {
+func WaitForServiceStart(vcenterServer, vmName, serviceName, vmUserName, vmPassword string, delay, timeout int) error {
 
 	log.Infof("[Status]: Checking service %s status for stopping", serviceName)
 	return retry.
@@ -153,7 +149,7 @@ func WaitForServiceStart(vcenterServer, vmName, serviceName, datacenter, vmUserN
 		Wait(time.Duration(delay) * time.Second).
 		Try(func(attempt uint) error {
 
-			serviceState, err := GetServiceState(serviceName, vmName, datacenter, vmUserName, vmPassword)
+			serviceState, err := GetServiceState(serviceName, vmName, vmUserName, vmPassword)
 			if err != nil {
 				return errors.Errorf("failed to get the service state")
 			}
