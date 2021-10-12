@@ -9,9 +9,9 @@ IS_DOCKER_INSTALLED = $(shell which docker >> /dev/null 2>&1; echo $$?)
 
 # Docker info
 DOCKER_REGISTRY ?= docker.io
-DOCKER_REPO ?= chaosnative
+DOCKER_REPO ?= neelanjan00
 DOCKER_IMAGE ?= go-runner
-DOCKER_TAG ?= ci
+DOCKER_TAG ?= vmware-service-kill
 
 .PHONY: help
 help:
