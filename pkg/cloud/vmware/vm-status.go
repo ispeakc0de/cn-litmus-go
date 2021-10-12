@@ -10,7 +10,7 @@ import (
 // GetVM checks if a given vm exists or not
 func GetVM(vmName string) error {
 
-	command := fmt.Sprintf(`govc vm.info -json %s`, vmName)
+	command := fmt.Sprintf(`govc find vm -name %s`, vmName)
 	stdout, stderr, err := Shellout(command)
 
 	if stderr != "" {
