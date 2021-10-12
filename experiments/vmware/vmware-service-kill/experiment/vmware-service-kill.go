@@ -29,8 +29,8 @@ func VMWareServiceKill(clients clients.ClientSets) {
 	chaosDetails := types.ChaosDetails{}
 
 	//Fetching all the ENV passed from the runner pod
-	log.Infof("[PreReq]: Getting the ENV for the %v experiment", os.Getenv("EXPERIMENT_NAME"))
 	experimentEnv.GetENV(&experimentsDetails)
+	log.Infof("[PreReq]: Fetched the ENV for the %s experiment", experimentsDetails.ExperimentName)
 
 	// Intialise the chaos attributes
 	experimentEnv.InitialiseChaosVariables(&chaosDetails, &experimentsDetails)

@@ -194,14 +194,14 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 					log.Infof("[Skip]: %s service is already active", serviceName)
 				default:
 					// Start the service
-					log.Info("[Chaos]: Starting %s service")
+					log.Infof("[Chaos]: Starting %s service", serviceName)
 					if err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 
 					//Wait for service to start
-					log.Infof("[Wait]: Wait for %s service to start")
-					if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+					log.Infof("[Wait]: Wait for %s service to start", serviceName)
+					if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 				}
@@ -287,14 +287,14 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 					log.Infof("[Skip]: %s service is already active", serviceName)
 				default:
 					// Start the service
-					log.Info("[Chaos]: Starting %s service")
+					log.Infof("[Chaos]: Starting %s service", serviceName)
 					if err := vmware.StartService(serviceName, experimentsDetails.VMName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 
 					//Wait for service to start
-					log.Infof("[Wait]: Wait for %s service to start")
-					if err := vmware.WaitForServiceStop(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
+					log.Infof("[Wait]: Wait for %s service to start", serviceName)
+					if err := vmware.WaitForServiceStart(experimentsDetails.VcenterServer, experimentsDetails.VMName, serviceName, experimentsDetails.Datacenter, experimentsDetails.VMUserName, experimentsDetails.VMPassword, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
 						return errors.Errorf("unable to start %s service, %s", serviceName, err)
 					}
 				}
