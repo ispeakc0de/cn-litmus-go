@@ -259,6 +259,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 		}
 
 		if experimentsDetails.SelfHealingServices == "true" {
+
 			for _, serviceName := range serviceNamesList {
 
 				//Wait for service to start
@@ -270,6 +271,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 				common.SetTargets(serviceName, "reverted", "Service", chaosDetails)
 			}
 		} else {
+
 			//Wait for chaos interval
 			log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
 			common.WaitForDuration(experimentsDetails.ChaosInterval)

@@ -122,6 +122,12 @@ func VMWareServiceKill(clients clients.ClientSets) {
 		}
 	}
 
+	log.Infof("VcenterServer: %s", experimentsDetails.VcenterServer)
+	log.Infof("VcenterUser: %s", experimentsDetails.VcenterUser)
+	log.Infof("VcenterPass: %s", experimentsDetails.VcenterPass)
+	log.Infof("vmUserName: %s", experimentsDetails.VMUserName)
+	log.Infof("vmPassword: %s", experimentsDetails.VMPassword)
+
 	// Set the ENVs for govc
 	os.Setenv("GOVC_URL", experimentsDetails.VcenterServer)
 	os.Setenv("GOVC_USERNAME", experimentsDetails.VcenterUser)
