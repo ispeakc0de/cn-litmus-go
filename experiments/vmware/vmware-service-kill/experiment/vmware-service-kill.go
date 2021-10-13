@@ -1,8 +1,6 @@
 package experiment
 
 import (
-	"os"
-
 	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
 	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-service-kill/environment"
 	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-service-kill/types"
@@ -127,12 +125,6 @@ func VMWareServiceKill(clients clients.ClientSets) {
 	log.Infof("VcenterPass: %s", experimentsDetails.VcenterPass)
 	log.Infof("vmUserName: %s", experimentsDetails.VMUserName)
 	log.Infof("vmPassword: %s", experimentsDetails.VMPassword)
-
-	// Set the ENVs for govc
-	os.Setenv("GOVC_URL", experimentsDetails.VcenterServer)
-	os.Setenv("GOVC_USERNAME", experimentsDetails.VcenterUser)
-	os.Setenv("GOVC_PASSWORD", experimentsDetails.VcenterPass)
-	os.Setenv("GOVC_INSECURE", "true")
 
 	// Verify that the services exist on VM and are in an active state (pre-chaos)
 	log.Info("[Status]: Verify that the services exist on VM and are in an active state (pre-chaos)")

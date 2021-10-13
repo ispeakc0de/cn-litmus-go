@@ -45,23 +45,26 @@ spec:
     - /bin/bash
     env:
 
-    - name: VCENTERSERVER
+    - name: GOVC_URL
       valueFrom:
         secretKeyRef:
           name: vcenter-secret
           key: VCENTERSERVER
 
-    - name: VCENTERUSER
+    - name: GOVC_USERNAME
       valueFrom:
         secretKeyRef:
           name: vcenter-secret
           key: VCENTERUSER
 
-    - name: VCENTERPASS
+    - name: GOVC_PASSWORD
       valueFrom:
         secretKeyRef:
           name: vcenter-secret
           key: VCENTERPASS
+
+    - name: GOVC_INSECURE
+      value: 'true'
 
     - name: VM_USER_NAME
       valueFrom:
