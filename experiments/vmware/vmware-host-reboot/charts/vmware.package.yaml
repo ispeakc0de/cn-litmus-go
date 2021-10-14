@@ -1,5 +1,0 @@
-packageName: vmware
-experiments:
-  - name: vmware-host-reboot
-    CSV: vmware-host-reboot.chartserviceversion.yaml
-    desc: "vmware-host-reboot"
