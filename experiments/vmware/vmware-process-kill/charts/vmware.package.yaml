@@ -1,0 +1,5 @@
+packageName: vmware
+experiments:
+  - name: vmware-process-kill
+    CSV: vmware-process-kill.chartserviceversion.yaml
+    desc: "vmware-process-kill"
