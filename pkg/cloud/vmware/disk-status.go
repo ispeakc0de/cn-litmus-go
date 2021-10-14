@@ -6,62 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	vmwareLib "github.com/litmuschaos/litmus-go/pkg/cloud/vmware"
 	"github.com/litmuschaos/litmus-go/pkg/log"
-	"github.com/litmuschaos/litmus-go/pkg/utils/retry"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
-
-// WaitForDiskDetachment will wait for the disk to completely detach from the VM
-func WaitForDiskDetachment(vcenterServer, appVMMoid, diskId, cookie string, delay, timeout int) error {
-
-	log.Info("[Status]: Checking disk status for detachment")
-	return retry.
-		Times(uint(timeout / delay)).
-		Wait(time.Duration(delay) * time.Second).
-		Try(func(attempt uint) error {
-
-			diskState, err := GetDiskState(vcenterServer, appVMMoid, diskId, cookie)
-			if err != nil {
-				return errors.Errorf("failed to get the disk state")
-			}
-
-			if diskState != "detached" {
-				log.Infof("[Info]: The disk state is %v", diskState)
-				return errors.Errorf("disk is not yet in detached state")
-			}
-
-			log.Infof("[Info]: The disk state is %v", diskState)
-			return nil
-		})
-}
-
-// WaitForDiskAttachment will wait for the disk to get attached to the VM
-func WaitForDiskAttachment(vcenterServer, appVMMoid, diskId, cookie string, delay, timeout int) error {
-
-	log.Info("[Status]: Checking disk status for attachment")
-	return retry.
-		Times(uint(timeout / delay)).
-		Wait(time.Duration(delay) * time.Second).
-		Try(func(attempt uint) error {
-
-			diskState, err := GetDiskState(vcenterServer, appVMMoid, diskId, cookie)
-			if err != nil {
-				return errors.Errorf("failed to get the disk status")
-			}
-
-			if diskState != "attached" {
-				log.Infof("[Info]: The disk state is %v", diskState)
-				return errors.Errorf("disk is not yet in attached state")
-			}
-
-			log.Infof("[Info]: The disk state is %v", diskState)
-			return nil
-		})
-}
 
 // GetDiskState will verify if the given disk is attached to the given VM or not
 func GetDiskState(vcenterServer, appVMMoid, diskId, cookie string) (string, error) {

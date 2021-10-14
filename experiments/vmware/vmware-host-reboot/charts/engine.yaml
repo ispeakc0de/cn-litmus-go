@@ -1,0 +1,28 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: vmware-host-chaos
+spec:
+  # It can be active/stop
+  engineState: 'active'
+  #ex. values: ns1:name=percona,ns2:run=nginx
+  auxiliaryAppInfo: ''
+  chaosServiceAccount: vmware-host-reboot-sa
+  # It can be delete/retain
+  jobCleanUpPolicy: 'delete'
+  experiments:
+    - name: vmware-host-reboot
+      spec:
+        components:
+          env:
+            # set the target host name
+            - name: HOST_NAME
+              value: ''
+
+            # set the datacenter of the target host
+            - name: HOST_DATACENTER
+              value: ''
+
+            # enable if the host belongs to a high availability cluster; defaults to disable
+            - name: HIGH_AVAILABILITY_CLUSTER
+              value: ''

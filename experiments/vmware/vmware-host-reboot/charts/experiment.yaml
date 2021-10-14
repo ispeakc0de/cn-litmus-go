@@ -1,0 +1,89 @@
+apiVersion: litmuschaos.io/v1alpha1
+description:
+  message: |
+    VMWare Host Reboot experiment causes a given VMWare ESX Host to reboot
+kind: ChaosExperiment
+metadata:
+  name: vmware-host-reboot
+  labels:
+    name: vmware-host-reboot
+    app.kubernetes.io/part-of: litmus
+    app.kubernetes.io/component: chaosexperiment
+    app.kubernetes.io/version: latest
+spec:
+  definition:
+    scope: Namespaced
+    permissions:
+      - apiGroups: 
+          - "" 
+          - "batch" 
+          - "apps" 
+          - "litmuschaos.io"
+        resources: 
+          - "jobs" 
+          - "pods" 
+          - "pods/log" 
+          - "events" 
+          - "deployments" 
+          - "replicasets" 
+          - "pods/exec" 
+          - "chaosengines" 
+          - "chaosexperiments" 
+          - "chaosresults"
+        verbs: 
+          - "create" 
+          - "list" 
+          - "get" 
+          - "patch" 
+          - "update" 
+          - "delete"
+    image: "litmuschaos/go-runner:latest"
+    imagePullPolicy: Always
+    args:
+    - -c
+    - ./experiments -name vmware-host-reboot
+    command:
+    - /bin/bash
+    env:
+    
+    - name: VCENTERSERVER
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERSERVER
+
+    - name: VCENTERUSER
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERUSER
+
+    - name: VCENTERPASS
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERPASS
+
+    - name: LIB
+      value: ''
+
+    - name: RAMP_TIME
+      value: ''
+
+    # set the target host name
+    - name: HOST_NAME
+      value: ''
+
+    # set the datacenter of the target host
+    - name: HOST_DATACENTER
+      value: ''
+
+    # enable if the host belongs to a high availability cluster; defaults to disable
+    - name: HIGH_AVAILABILITY_CLUSTER
+      value: ''
+
+    labels:
+      name: vmware-host-reboot
+      app.kubernetes.io/part-of: litmus
+      app.kubernetes.io/component: experiment-job
+      app.kubernetes.io/version: latest 
