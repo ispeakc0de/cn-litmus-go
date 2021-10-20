@@ -77,9 +77,6 @@ RUN curl -L https://github.com/litmuschaos/test-tools/releases/download/1.13.6/d
 COPY --from=docker:19.03 /usr/local/bin/docker /usr/local/bin/
 COPY --from=builder /output/ /litmus
 
-#Copying Necessary Files
-COPY ./pkg/cloud/aws/common/ssm-docs/LitmusChaos-AWS-SSM-Docs.yml ./litmus/LitmusChaos-AWS-SSM-Docs.yml
-
 #add new user
 RUN adduser -D -S $USER \
         && echo "$USER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$USER \
