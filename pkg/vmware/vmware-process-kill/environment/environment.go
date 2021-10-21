@@ -31,23 +31,15 @@ func GetENV(experimentDetails *experimentTypes.ExperimentDetails) {
 	experimentDetails.ChaosPodName = common.Getenv("POD_NAME", "")
 	experimentDetails.Delay, _ = strconv.Atoi(common.Getenv("STATUS_CHECK_DELAY", "2"))
 	experimentDetails.Timeout, _ = strconv.Atoi(common.Getenv("STATUS_CHECK_TIMEOUT", "180"))
-	experimentDetails.ChaosInjectCmd = common.Getenv("CHAOS_INJECT_COMMAND", "")
-	experimentDetails.ChaosKillCmd = common.Getenv("CHAOS_KILL_COMMAND", "")
 	experimentDetails.TargetContainer = common.Getenv("TARGET_CONTAINER", "")
-	experimentDetails.TargetPods = common.Getenv("TARGET_PODS", "")
-	experimentDetails.PodsAffectedPerc, _ = strconv.Atoi(common.Getenv("PODS_AFFECTED_PERC", "0"))
+	experimentDetails.ProcessIds = common.Getenv("PROCESS_IDS", "")
+	experimentDetails.VMName = common.Getenv("VM_NAME", "")
+	experimentDetails.VMUserName = common.Getenv("VM_USER_NAME", "")
+	experimentDetails.VMPassword = common.Getenv("VM_PASSWORD", "")
 }
 
 //InitialiseChaosVariables initialise all the global variables
 func InitialiseChaosVariables(chaosDetails *types.ChaosDetails, experimentDetails *experimentTypes.ExperimentDetails) {
-	appDetails := types.AppDetails{}
-	appDetails.AnnotationCheck, _ = strconv.ParseBool(common.Getenv("ANNOTATION_CHECK", "false"))
-	appDetails.AnnotationKey = common.Getenv("ANNOTATION_KEY", "litmuschaos.io/chaos")
-	appDetails.AnnotationValue = "true"
-	appDetails.Kind = experimentDetails.AppKind
-	appDetails.Label = experimentDetails.AppLabel
-	appDetails.Namespace = experimentDetails.AppNS
-
 	chaosDetails.ChaosNamespace = experimentDetails.ChaosNamespace
 	chaosDetails.ChaosPodName = experimentDetails.ChaosPodName
 	chaosDetails.ChaosUID = experimentDetails.ChaosUID
@@ -56,7 +48,4 @@ func InitialiseChaosVariables(chaosDetails *types.ChaosDetails, experimentDetail
 	chaosDetails.InstanceID = experimentDetails.InstanceID
 	chaosDetails.Timeout = experimentDetails.Timeout
 	chaosDetails.Delay = experimentDetails.Delay
-	chaosDetails.AppDetail = appDetails
-	chaosDetails.JobCleanupPolicy = common.Getenv("JOB_CLEANUP_POLICY", "retain")
-	chaosDetails.ProbeImagePullPolicy = experimentDetails.LIBImagePullPolicy
 }
