@@ -59,39 +59,29 @@ func Experiment(clients clients.ClientSets) {
 	types.SetResultEventAttributes(&eventsDetails, types.AwaitedVerdict, msg, "Normal", &resultDetails)
 	events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosResult")
 
-	//DISPLAY THE APP INFORMATION
-	log.InfoWithValues("[Info]: The application information is as follows", logrus.Fields{
-		"Namespace":      experimentsDetails.AppNS,
-		"Label":          experimentsDetails.AppLabel,
-		"Chaos Duration": experimentsDetails.ChaosDuration,
-	})
-
 	// Calling AbortWatcher go routine, it will continuously watch for the abort signal and generate the required events and result
 	go common.AbortWatcher(experimentsDetails.ExperimentName, clients, &resultDetails, &chaosDetails, &eventsDetails)
 
-	// ADD A PRE-CHAOS CHECK OF YOUR CHOICE HERE
-	// POD STATUS CHECKS FOR THE APPLICATION UNDER TEST AND AUXILIARY APPLICATIONS ARE ADDED BY DEFAULT
+	//DISPLAY THE APP INFORMATION
+	log.InfoWithValues("[Info]: The application information is as follows", logrus.Fields{
+		"App Namespace": experimentsDetails.AppNS,
+		"AppLabel":      experimentsDetails.AppLabel,
+		"Ramp Time":     experimentsDetails.RampTime,
+	})
+
+	//DISPLAY THE PROCESS INFORMATION
+	log.InfoWithValues("The disk information is as follows", logrus.Fields{
+		"VM Name":  experimentsDetails.VMName,
+		"Disk IDs": experimentsDetails.ProcessIds,
+	})
 
 	//PRE-CHAOS APPLICATION STATUS CHECK
 	log.Info("[Status]: Verify that the AUT (Application Under Test) is running (pre-chaos)")
 	if err := status.AUTStatusCheck(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.TargetContainer, experimentsDetails.Timeout, experimentsDetails.Delay, clients, &chaosDetails); err != nil {
 		log.Errorf("Application status check failed, err: %v", err)
 		failStep := "Verify that the AUT (Application Under Test) is running (pre-chaos)"
-		types.SetEngineEventAttributes(&eventsDetails, types.PreChaosCheck, "AUT: Not Running", "Warning", &chaosDetails)
-		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 		return
-	}
-
-	//PRE-CHAOS AUXILIARY APPLICATION STATUS CHECK
-	if experimentsDetails.AuxiliaryAppInfo != "" {
-		log.Info("[Status]: Verify that the Auxiliary Applications are running (pre-chaos)")
-		if err := status.CheckAuxiliaryApplicationStatus(experimentsDetails.AuxiliaryAppInfo, experimentsDetails.Timeout, experimentsDetails.Delay, clients); err != nil {
-			log.Errorf("Auxiliary Application status check failed, err: %v", err)
-			failStep := "Verify that the Auxiliary Applications are running (pre-chaos)"
-			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
-			return
-		}
 	}
 
 	if experimentsDetails.EngineName != "" {
@@ -116,6 +106,19 @@ func Experiment(clients clients.ClientSets) {
 		types.SetEngineEventAttributes(&eventsDetails, types.PreChaosCheck, msg, "Normal", &chaosDetails)
 		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 	}
+
+	//PRE-CHAOS AUXILIARY APPLICATION STATUS CHECK
+	if experimentsDetails.AuxiliaryAppInfo != "" {
+		log.Info("[Status]: Verify that the Auxiliary Applications are running (pre-chaos)")
+		if err := status.CheckAuxiliaryApplicationStatus(experimentsDetails.AuxiliaryAppInfo, experimentsDetails.Timeout, experimentsDetails.Delay, clients); err != nil {
+			log.Errorf("Auxiliary Application status check failed, err: %v", err)
+			failStep := "Verify that the Auxiliary Applications are running (pre-chaos)"
+			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+			return
+		}
+	}
+
+	//Verify that the VM is connected and powered on and the target processes exist in the VM
 
 	// INVOKE THE CHAOSLIB OF YOUR CHOICE HERE, WHICH WILL CONTAIN
 	// THE BUSINESS LOGIC OF THE ACTUAL CHAOS

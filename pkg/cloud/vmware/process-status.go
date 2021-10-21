@@ -9,7 +9,7 @@ import (
 )
 
 // GetProcess checks if the given process exists on a VM or not
-func GetProcess(pid, vmName, vmUserName, vmPassword string) (bool, error) {
+func GetProcess(processId, vmName, vmUserName, vmPassword string) (bool, error) {
 
 	type Process struct {
 		ProcessInfo []struct {
@@ -18,7 +18,7 @@ func GetProcess(pid, vmName, vmUserName, vmPassword string) (bool, error) {
 		} `json:"ProcessInfo"`
 	}
 
-	command := fmt.Sprintf(`govc guest.ps -vm %s -l %s:%s -json=true -p %s`, vmName, vmUserName, vmPassword, pid)
+	command := fmt.Sprintf(`govc guest.ps -vm %s -l %s:%s -json=true -p %s`, vmName, vmUserName, vmPassword, processId)
 
 	stdout, stderr, err := utils.Shellout(command)
 	if err != nil {
@@ -33,7 +33,7 @@ func GetProcess(pid, vmName, vmUserName, vmPassword string) (bool, error) {
 	json.Unmarshal([]byte(stdout), &processDetails)
 
 	if len(processDetails.ProcessInfo) != 1 {
-		return false, errors.Errorf("process %s not found", pid)
+		return false, errors.Errorf("process %s not found", processId)
 	}
 
 	return true, nil
