@@ -12,7 +12,6 @@ type ExperimentDetails struct {
 	ExperimentName   string
 	EngineName       string
 	ChaosDuration    int
-	ChaosInterval    int
 	RampTime         int
 	ChaosLib         string
 	AppNS            string
