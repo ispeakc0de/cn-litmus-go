@@ -3,9 +3,11 @@ package experiment
 import (
 	"os"
 
+	litmusLIB "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-process-kill/lib"
 	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
 	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/environment"
 	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/types"
+	"github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/events"
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -18,7 +20,7 @@ import (
 )
 
 // Experiment contains steps to inject chaos
-func Experiment(clients clients.ClientSets) {
+func VMWareProcessKill(clients clients.ClientSets) {
 
 	experimentsDetails := experimentTypes.ExperimentDetails{}
 	resultDetails := types.ResultDetails{}
@@ -130,12 +132,12 @@ func Experiment(clients clients.ClientSets) {
 	// Including the litmus lib
 	switch experimentsDetails.ChaosLib {
 	case "litmus":
-		// if err := litmusLIB.PrepareChaos(&experimentsDetails, clients, &resultDetails, &eventsDetails, &chaosDetails); err != nil {
-		// 	failStep := "failed in chaos injection phase"
-		// 	result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
-		// 	log.Errorf("Chaos injection failed, err: %v", err)
-		// 	return
-		// }
+		if err := litmusLIB.PrepareProcessKill(&experimentsDetails, clients, &resultDetails, &eventsDetails, &chaosDetails); err != nil {
+			failStep := "failed in chaos injection phase"
+			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+			log.Errorf("Chaos injection failed, err: %v", err)
+			return
+		}
 	default:
 		log.Error("[Invalid]: Please provide the correct LIB")
 		failStep := "no match found for specified lib"
@@ -143,16 +145,14 @@ func Experiment(clients clients.ClientSets) {
 		return
 	}
 
-	// ADD A POST-CHAOS CHECK OF YOUR CHOICE HERE
-	// POD STATUS CHECKS FOR THE APPLICATION UNDER TEST AND AUXILIARY APPLICATIONS ARE ADDED BY DEFAULT
+	log.Infof("[Confirmation]: %v chaos has been injected successfully", experimentsDetails.ExperimentName)
+	resultDetails.Verdict = v1alpha1.ResultVerdictPassed
 
 	//POST-CHAOS APPLICATION STATUS CHECK
 	log.Info("[Status]: Verify that the AUT (Application Under Test) is running (post-chaos)")
 	if err := status.AUTStatusCheck(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.TargetContainer, experimentsDetails.Timeout, experimentsDetails.Delay, clients, &chaosDetails); err != nil {
 		log.Errorf("Application status check failed, err: %v", err)
 		failStep := "Verify that the AUT (Application Under Test) is running (post-chaos)"
-		types.SetEngineEventAttributes(&eventsDetails, types.PostChaosCheck, "AUT: Not Running", "Warning", &chaosDetails)
-		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 		return
 	}
