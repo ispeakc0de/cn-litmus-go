@@ -59,7 +59,7 @@ func injectChaos(experimentsDetails *experimentTypes.ExperimentDetails, processI
 
 			// Killing the process
 			log.Infof("[Chaos]: Killing process %s", processId)
-			if err := vmware.KillLinuxProcess(processId, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+			if err := vmware.KillProcess(processId, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 				return errors.Errorf("failed to kill process %s, err: %s", processId, err.Error())
 			}
 

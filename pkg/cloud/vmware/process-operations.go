@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KillLinuxProcess kills a given process in a Linux VM
-func KillLinuxProcess(processId, vmName, vmUserName, vmPassword string) error {
+// KillProcess kills a given process in a VM
+func KillProcess(processId, vmName, vmUserName, vmPassword string) error {
 
 	command := fmt.Sprintf(`govc guest.run -vm=%s -l=%s:%s "echo %s | sudo -S kill %s"`, vmName, vmUserName, vmPassword, vmPassword, processId)
 
