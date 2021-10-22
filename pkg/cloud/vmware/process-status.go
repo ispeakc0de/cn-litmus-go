@@ -33,7 +33,7 @@ func GetProcess(processId, vmName, vmUserName, vmPassword string) (bool, error) 
 	json.Unmarshal([]byte(stdout), &processDetails)
 
 	if len(processDetails.ProcessInfo) != 1 {
-		return false, errors.Errorf("process %s not found", processId)
+		return false, nil
 	}
 
 	return true, nil

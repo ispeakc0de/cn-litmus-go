@@ -118,7 +118,7 @@ func Experiment(clients clients.ClientSets) {
 		}
 	}
 
-	//Verify that the VM is connected and powered on and the target processes exist in the VM
+	//Verify that the VM is connected and powered-on and the target processes exist in the VM
 
 	// INVOKE THE CHAOSLIB OF YOUR CHOICE HERE, WHICH WILL CONTAIN
 	// THE BUSINESS LOGIC OF THE ACTUAL CHAOS
