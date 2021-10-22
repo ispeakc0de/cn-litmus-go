@@ -3,6 +3,7 @@ package experiment
 import (
 	"os"
 
+	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
 	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/environment"
 	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/types"
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
@@ -119,10 +120,12 @@ func Experiment(clients clients.ClientSets) {
 	}
 
 	//Verify that the VM is connected and powered-on and the target processes exist in the VM
-
-	// INVOKE THE CHAOSLIB OF YOUR CHOICE HERE, WHICH WILL CONTAIN
-	// THE BUSINESS LOGIC OF THE ACTUAL CHAOS
-	// IT CAN BE A NEW CHAOSLIB YOU HAVE CREATED SPECIALLY FOR THIS EXPERIMENT OR ANY EXISTING ONE
+	if err := vmware.ProcessStateCheck(experimentsDetails.VMName, experimentsDetails.ProcessIds, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+		log.Errorf("vmware process state check failed pre chaos, err: %v", err)
+		failStep := "Verify the processes exist on the vm (pre-chaos)"
+		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+		return
+	}
 
 	// Including the litmus lib
 	switch experimentsDetails.ChaosLib {
@@ -134,9 +137,9 @@ func Experiment(clients clients.ClientSets) {
 		// 	return
 		// }
 	default:
-		failStep := "lib and container-runtime combination not supported!"
+		log.Error("[Invalid]: Please provide the correct LIB")
+		failStep := "no match found for specified lib"
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
-		log.Error("lib and container-runtime combination not supported, provide the correct value of lib & container-runtime")
 		return
 	}
 

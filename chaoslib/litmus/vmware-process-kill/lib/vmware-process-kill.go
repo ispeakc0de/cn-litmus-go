@@ -1,138 +1,90 @@
 package lib
 
-// import (
-// 	"os"
-// 	"os/signal"
-// 	"syscall"
-// 	"time"
+import (
+	"strings"
+	"time"
 
-// 	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/types"
-// 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
-// 	"github.com/litmuschaos/litmus-go/pkg/events"
-// 	"github.com/litmuschaos/litmus-go/pkg/log"
-// 	"github.com/litmuschaos/litmus-go/pkg/types"
-// 	"github.com/litmuschaos/litmus-go/pkg/utils/common"
-// 	litmusexec "github.com/litmuschaos/litmus-go/pkg/utils/exec"
-// 	"github.com/pkg/errors"
-// 	"github.com/sirupsen/logrus"
-// )
+	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
+	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/types"
+	"github.com/litmuschaos/litmus-go/pkg/clients"
+	"github.com/litmuschaos/litmus-go/pkg/events"
+	"github.com/litmuschaos/litmus-go/pkg/log"
+	"github.com/litmuschaos/litmus-go/pkg/probe"
+	"github.com/litmuschaos/litmus-go/pkg/types"
+	"github.com/litmuschaos/litmus-go/pkg/utils/common"
+	"github.com/pkg/errors"
+)
 
-// func injectChaos(experimentsDetails *experimentTypes.ExperimentDetails, podName string, clients clients.ClientSets) error {
-// 	// It will contains all the pod & container details required for exec command
-// 	execCommandDetails := litmusexec.PodDetails{}
-// 	command := []string{"/bin/sh", "-c", experimentsDetails.ChaosInjectCmd}
-// 	litmusexec.SetExecCommandAttributes(&execCommandDetails, podName, experimentsDetails.TargetContainer, experimentsDetails.AppNS)
-// 	_, err := litmusexec.Exec(&execCommandDetails, clients, command)
-// 	if err != nil {
-// 		return errors.Errorf("unable to run command inside target container, err: %v", err)
-// 	}
-// 	return nil
-// }
+// PrepareProcessKill contains the prepration and injection steps for the experiment
+func PrepareProcessKill(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
 
-// func experimentExecution(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
+	//Waiting for the ramp time before chaos injection
+	if experimentsDetails.RampTime != 0 {
+		log.Infof("[Ramp]: Waiting for the %vs ramp time before injecting chaos", experimentsDetails.RampTime)
+		common.WaitForDuration(experimentsDetails.RampTime)
+	}
 
-// 	// Get the target pod details for the chaos execution
-// 	// if the target pod is not defined it will derive the random target pod list using pod affected percentage
-// 	targetPodList, err := common.GetPodList(experimentsDetails.TargetPods, experimentsDetails.PodsAffectedPerc, clients, chaosDetails)
-// 	if err != nil {
-// 		return err
-// 	}
+	processIdList := strings.Split(experimentsDetails.ProcessIds, ",")
+	if len(processIdList) == 0 {
+		return errors.Errorf("no processes found")
+	}
 
-// 	podNames := []string{}
-// 	for _, pod := range targetPodList.Items {
-// 		podNames = append(podNames, pod.Name)
-// 	}
-// 	log.Infof("Target pods list for chaos, %v", podNames)
+	injectChaos(experimentsDetails, processIdList, clients, resultDetails, eventsDetails, chaosDetails)
 
-// 	//Get the target container name of the application pod
-// 	if experimentsDetails.TargetContainer == "" {
-// 		experimentsDetails.TargetContainer, err = common.GetTargetContainer(experimentsDetails.AppNS, targetPodList.Items[0].Name, clients)
-// 		if err != nil {
-// 			return errors.Errorf("unable to get the target container name, err: %v", err)
-// 		}
-// 	}
+	//Waiting for the ramp time after chaos injection
+	if experimentsDetails.RampTime != 0 {
+		log.Infof("[Ramp]: Waiting for the %vs ramp time after injecting chaos", experimentsDetails.RampTime)
+		common.WaitForDuration(experimentsDetails.RampTime)
+	}
 
-// 	return runChaos(experimentsDetails, targetPodList, clients, resultDetails, eventsDetails, chaosDetails)
-// }
+	return nil
+}
 
-// func runChaos(experimentsDetails *experimentTypes.ExperimentDetails, targetPodList corev1.PodList, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
-// 	var endTime <-chan time.Time
-// 	timeDelay := time.Duration(experimentsDetails.ChaosDuration) * time.Second
+// injectChaos will inject the process kill chaos in serial mode which means one after the other
+func injectChaos(experimentsDetails *experimentTypes.ExperimentDetails, processIdList []string, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
 
-// 	for _, pod := range targetPodList.Items {
+	//ChaosStartTimeStamp contains the start timestamp, when the chaos injection begin
+	ChaosStartTimeStamp := time.Now()
+	duration := int(time.Since(ChaosStartTimeStamp).Seconds())
 
-// 		if experimentsDetails.EngineName != "" {
-// 			msg := "Injecting " + experimentsDetails.ExperimentName + " chaos on " + pod.Name + " pod"
-// 			types.SetEngineEventAttributes(eventsDetails, types.ChaosInject, msg, "Normal", chaosDetails)
-// 			events.GenerateEvents(eventsDetails, clients, chaosDetails, "ChaosEngine")
-// 		}
+	for duration < experimentsDetails.ChaosDuration {
 
-// 		log.InfoWithValues("[Chaos]: The Target application details", logrus.Fields{
-// 			"container": experimentsDetails.TargetContainer,
-// 			"Pod":       pod.Name,
-// 		})
+		if experimentsDetails.EngineName != "" {
+			msg := "Injecting " + experimentsDetails.ExperimentName + " chaos on VM processes"
+			types.SetEngineEventAttributes(eventsDetails, types.ChaosInject, msg, "Normal", chaosDetails)
+			events.GenerateEvents(eventsDetails, clients, chaosDetails, "ChaosEngine")
+		}
 
-// 		go injectChaos(experimentsDetails, pod.Name, clients)
+		for i, processId := range processIdList {
 
-// 		log.Infof("[Chaos]:Waiting for: %vs", experimentsDetails.ChaosDuration)
+			// Killing the process
+			log.Infof("[Chaos]: Killing process %s", processId)
+			if err := vmware.KillLinuxProcess(processId, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+				return errors.Errorf("failed to kill process %s, err: %s", processId, err.Error())
+			}
 
-// 		// signChan channel is used to transmit signal notifications.
-// 		signChan := make(chan os.Signal, 1)
-// 		// Catch and relay certain signal(s) to signChan channel.
-// 		signal.Notify(signChan, os.Interrupt, syscall.SIGTERM)
-// 	loop:
-// 		for {
-// 			endTime = time.After(timeDelay)
-// 			select {
-// 			case <-signChan:
-// 				log.Info("[Chaos]: Revert Started")
-// 				if err := killChaos(experimentsDetails, pod.Name, clients); err != nil {
-// 					log.Error("unable to kill chaos process after receiving abortion signal")
-// 				}
-// 				log.Info("[Chaos]: Revert Completed")
-// 				os.Exit(1)
-// 			case <-endTime:
-// 				log.Infof("[Chaos]: Time is up for experiment: %v", experimentsDetails.ExperimentName)
-// 				endTime = nil
-// 				break loop
-// 			}
-// 		}
-// 		if err := killChaos(experimentsDetails, pod.Name, clients); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+			common.SetTargets(processId, "injected", "Process", chaosDetails)
 
-// func PrepareChaos(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
+			// Wait for the process to be killed
+			log.Infof("[Wait]: Wait for process %s to be killed", processId)
+			if err := vmware.WaitForProcessKill(processId, experimentsDetails.VMName, experimentsDetails.VMUserName, experimentsDetails.VMPassword, chaosDetails.Delay, chaosDetails.Timeout); err != nil {
+				return errors.Errorf("unable to kill process %s, err: %s", processId, err.Error())
+			}
 
-// 	//Waiting for the ramp time before chaos injection
-// 	if experimentsDetails.RampTime != 0 {
-// 		log.Infof("[Ramp]: Waiting for the %vs ramp time before injecting chaos", experimentsDetails.RampTime)
-// 		common.WaitForDuration(experimentsDetails.RampTime)
-// 	}
-// 	//Starting the CPU stress experiment
-// 	if err := experimentExecution(experimentsDetails, clients, resultDetails, eventsDetails, chaosDetails); err != nil {
-// 		return err
-// 	}
-// 	//Waiting for the ramp time after chaos injection
-// 	if experimentsDetails.RampTime != 0 {
-// 		log.Infof("[Ramp]: Waiting for the %vs ramp time after injecting chaos", experimentsDetails.RampTime)
-// 		common.WaitForDuration(experimentsDetails.RampTime)
-// 	}
-// 	return nil
-// }
+			// run the probes during chaos
+			if len(resultDetails.ProbeDetails) != 0 && i == 0 {
+				if err := probe.RunProbes(chaosDetails, clients, resultDetails, "DuringChaos", eventsDetails); err != nil {
+					return err
+				}
+			}
 
-// func killChaos(experimentsDetails *experimentTypes.ExperimentDetails, podName string, clients clients.ClientSets) error {
-// 	// It will contains all the pod & container details required for exec command
-// 	execCommandDetails := litmusexec.PodDetails{}
+			//Wait for chaos interval
+			log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
+			common.WaitForDuration(experimentsDetails.ChaosInterval)
+		}
 
-// 	command := []string{"/bin/sh", "-c", experimentsDetails.ChaosKillCmd}
+		duration = int(time.Since(ChaosStartTimeStamp).Seconds())
+	}
 
-// 	litmusexec.SetExecCommandAttributes(&execCommandDetails, podName, experimentsDetails.TargetContainer, experimentsDetails.AppNS)
-// 	_, err := litmusexec.Exec(&execCommandDetails, clients, command)
-// 	if err != nil {
-// 		return errors.Errorf("unable to kill the process in %v pod, err: %v", podName, err)
-// 	}
-// 	return nil
-// }
+	return nil
+}
