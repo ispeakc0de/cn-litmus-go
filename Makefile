@@ -24,7 +24,7 @@ help:
 	@echo ""
 
 .PHONY: all
-all: deps gotasks build push trivy-check
+all: deps gotasks build push
 
 .PHONY: deps
 deps: _build_check_docker
@@ -89,12 +89,3 @@ push-amd64:
 	@echo "--> Pushing image" 
 	@echo "------------------------------"
 	@sudo docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO)/$(DOCKER_IMAGE):$(DOCKER_TAG)
-		
-.PHONY: trivy-check
-trivy-check:
-
-	@echo "------------------------"
-	@echo "---> Running Trivy Check"
-	@echo "------------------------"
-	@./trivy --exit-code 0 --severity HIGH --no-progress $(DOCKER_REGISTRY)/$(DOCKER_REPO)/$(DOCKER_IMAGE):$(DOCKER_TAG)
-	@./trivy --exit-code 0 --severity CRITICAL --no-progress $(DOCKER_REGISTRY)/$(DOCKER_REPO)/$(DOCKER_IMAGE):$(DOCKER_TAG)
