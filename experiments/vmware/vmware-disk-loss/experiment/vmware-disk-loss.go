@@ -31,7 +31,7 @@ func VMWareDiskLoss(clients clients.ClientSets) {
 	log.Infof("[PreReq]: Fetched the ENV for the %v experiment", experimentsDetails.ExperimentName)
 
 	// Intialise the chaos attributes
-	experimentEnv.InitialiseChaosVariables(&chaosDetails, &experimentsDetails)
+	types.InitialiseChaosVariables(&chaosDetails)
 
 	// Intialise Chaos Result Parameters
 	types.SetResultAttributes(&resultDetails, chaosDetails)

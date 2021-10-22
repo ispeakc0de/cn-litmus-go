@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/litmuschaos/chaos-operator v0.0.0-20210906054553-064706497fb6
-	github.com/litmuschaos/litmus-go v0.0.0-20211001050128-f598a43c6654
+	github.com/litmuschaos/litmus-go v0.0.0-20211019165030-0f750768d529
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
 	k8s.io/apimachinery v0.17.3

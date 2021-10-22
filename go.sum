@@ -643,8 +643,8 @@ github.com/litmuschaos/chaos-operator v0.0.0-20210906054553-064706497fb6 h1:in/j
 github.com/litmuschaos/chaos-operator v0.0.0-20210906054553-064706497fb6/go.mod h1:xC3SRAipOz7NxXsmCtDmbto5xNb//ewmZSXydwUt30s=
 github.com/litmuschaos/elves v0.0.0-20201107015738-552d74669e3c/go.mod h1:DsbHGNUq/78NZozWVVI9Q6eBei4I+JjlkkD5aibJ3MQ=
 github.com/litmuschaos/litmus-go v0.0.0-20210705063441-babf0c4aa57d/go.mod h1:MNO+1u4jBPjLtFO56bckIv87EhwTkppJxDf8+6PbLRY=
-github.com/litmuschaos/litmus-go v0.0.0-20211001050128-f598a43c6654 h1:A4uoLKEvq5irHPtgIg7hrcClhzzg85MOj/pGowDI76s=
-github.com/litmuschaos/litmus-go v0.0.0-20211001050128-f598a43c6654/go.mod h1:UFs+pZ0FJsjJckTRW0wnt2weCOvvEx+PqhCXL7z+6C8=
+github.com/litmuschaos/litmus-go v0.0.0-20211019165030-0f750768d529 h1:W3+j4hj2UQsIBCXuSItHlvtWdDGTaAGqb4cuPqIxdAw=
+github.com/litmuschaos/litmus-go v0.0.0-20211019165030-0f750768d529/go.mod h1:UFs+pZ0FJsjJckTRW0wnt2weCOvvEx+PqhCXL7z+6C8=
 github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e/go.mod h1:7rIyQOR62GCctdiQpZ/zOJlFyk6y+94wXzv6RNZgaR4=
 github.com/lpabon/godbc v0.1.1/go.mod h1:Jo9QV0cf3U6jZABgiJ2skINAXb9j8m51r07g4KI92ZA=
 github.com/lucas-clemente/aes12 v0.0.0-20171027163421-cd47fb39b79f/go.mod h1:JpH9J1c9oX6otFSgdUHwUBUizmKlrMjxWnIAjff4m04=
