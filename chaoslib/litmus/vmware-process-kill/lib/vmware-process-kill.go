@@ -78,11 +78,9 @@ func injectChaos(experimentsDetails *experimentTypes.ExperimentDetails, processI
 				}
 			}
 
-			if i != 0 {
-				//Wait for chaos interval
-				log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
-				common.WaitForDuration(experimentsDetails.ChaosInterval)
-			}
+			//Wait for chaos interval
+			log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
+			common.WaitForDuration(experimentsDetails.ChaosInterval)
 		}
 
 		duration = int(time.Since(ChaosStartTimeStamp).Seconds())

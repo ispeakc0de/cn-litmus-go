@@ -121,7 +121,8 @@ func VMWareProcessKill(clients clients.ClientSets) {
 		}
 	}
 
-	//Verify that the VM is connected and powered-on and the target processes exist in the VM
+	//Verify that the VM is connected and powered-on and the target processes exist in the VM (pre-chaos)
+	log.Info("[Status]: Verify that the processes exist on VM (pre-chaos)")
 	if err := vmware.ProcessStateCheck(experimentsDetails.VMName, experimentsDetails.ProcessIds, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 		log.Errorf("vmware process state check failed pre chaos, err: %v", err)
 		failStep := "Verify the processes exist on the vm (pre-chaos)"
