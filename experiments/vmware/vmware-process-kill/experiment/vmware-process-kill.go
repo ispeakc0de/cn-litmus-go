@@ -73,9 +73,9 @@ func VMWareProcessKill(clients clients.ClientSets) {
 	})
 
 	//DISPLAY THE PROCESS INFORMATION
-	log.InfoWithValues("The disk information is as follows", logrus.Fields{
-		"VM Name":  experimentsDetails.VMName,
-		"Disk IDs": experimentsDetails.ProcessIds,
+	log.InfoWithValues("The process information is as follows", logrus.Fields{
+		"VM Name":     experimentsDetails.VMName,
+		"Process IDs": experimentsDetails.ProcessIds,
 	})
 
 	//PRE-CHAOS APPLICATION STATUS CHECK
