@@ -45,8 +45,41 @@ spec:
     - /bin/bash
     env:
 
+    - name: GOVC_URL
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERSERVER
+
+    - name: GOVC_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERUSER
+
+    - name: GOVC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VCENTERPASS
+
+    - name: GOVC_INSECURE
+      value: 'true'
+
+    - name: VM_USER_NAME
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VM_USER_NAME
+
+    - name: VM_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: vcenter-secret
+          key: VM_PASSWORD
+
     - name: TOTAL_CHAOS_DURATION
-      value: '' 
+      value: ''
 
     - name: CHAOS_INTERVAL
       value: ''
@@ -55,6 +88,12 @@ spec:
       value: ''
 
     - name: RAMP_TIME
+      value: ''
+
+    - name: PROCESS_IDS
+      value: ''
+
+    - name: VM_NAME
       value: ''
       
     labels:
