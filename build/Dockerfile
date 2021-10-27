@@ -20,9 +20,9 @@ RUN apk --update add \
         iproute2
 
 # Packaging stage
-# Image source: https://github.com/chaosnative/test-tools/blob/master/custom/hardened-alpine/experiment/Dockerfile
+# Image source: https://github.com/litmuschaos/test-tools/blob/master/custom/hardened-alpine/experiment/Dockerfile
 # The base image is non-root (have litmus user) with default litmus directory.
-FROM chaosnative/experiment-alpine
+FROM litmuschaos/experiment-alpine
 
 LABEL maintainer="ChaosNative"
 

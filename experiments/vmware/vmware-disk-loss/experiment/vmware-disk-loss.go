@@ -30,14 +30,14 @@ func VMWareDiskLoss(clients clients.ClientSets) {
 	experimentEnv.GetENV(&experimentsDetails)
 	log.Infof("[PreReq]: Fetched the ENV for the %v experiment", experimentsDetails.ExperimentName)
 
-	// Intialise the chaos attributes
+	// Intialize the chaos attributes
 	types.InitialiseChaosVariables(&chaosDetails)
 
 	// Intialize Chaos Result Parameters
 	types.SetResultAttributes(&resultDetails, chaosDetails)
 
 	if experimentsDetails.EngineName != "" {
-		// Intialise the probe details. Bail out upon error, as we haven't entered exp business logic yet
+		// Intialize the probe details. Bail out upon error, as we haven't entered exp business logic yet
 		if err = probe.InitializeProbesInChaosResultDetails(&chaosDetails, clients, &resultDetails); err != nil {
 			log.Errorf("Unable to initialize the probes, err: %v", err)
 			return
