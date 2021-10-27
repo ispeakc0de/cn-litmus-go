@@ -24,5 +24,3 @@ FROM litmuschaos/experiment-alpine
 LABEL maintainer="ChaosNative"
 
 COPY --from=builder /output/ /litmus
-COPY --from=dep /usr/bin/sudo /usr/bin/
-COPY --from=dep /sbin/tc /sbin/
