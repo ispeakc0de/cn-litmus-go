@@ -9,15 +9,12 @@ WORKDIR /litmus-go
 RUN export GOOS=${TARGETOS} && \
     export GOARCH=${TARGETARCH}
 
+RUN apk add --update curl
+
+#Installing govc cli binaries
+RUN curl -L https://github.com/vmware/govmomi/releases/download/v0.26.1/govc_Linux_x86_64.tar.gz --output ~/govc_Linux_x86_64.tar.gz && mkdir ~/govc && tar xf ~/govc_Linux_x86_64.tar.gz -C ~/govc && cp ~/govc/govc /usr/local/bin && rm -r ~/govc && rm ~/govc_Linux_x86_64.tar.gz && chmod +x /usr/local/bin/govc
+
 RUN CGO_ENABLED=0 go build -o /output/experiments ./bin/experiment
-
-
-FROM alpine:3.13 AS dep
-
-# Install generally useful things
-RUN apk --update add \
-        sudo \
-        iproute2
 
 # Packaging stage
 # Image source: https://github.com/litmuschaos/test-tools/blob/master/custom/hardened-alpine/experiment/Dockerfile
