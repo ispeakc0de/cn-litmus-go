@@ -12,7 +12,6 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 
 	vmwareDiskLoss "github.com/chaosnative/litmus-go/experiments/vmware/vmware-disk-loss/experiment"
-	vmwareProcessKill "github.com/chaosnative/litmus-go/experiments/vmware/vmware-process-kill/experiment"
 
 	"github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -47,8 +46,6 @@ func main() {
 	switch *experimentName {
 	case "vmware-disk-loss":
 		vmwareDiskLoss.VMWareDiskLoss(clients)
-	case "vmware-process-kill":
-		vmwareProcessKill.VMWareProcessKill(clients)
 
 	default:
 		log.Errorf("Unsupported -name %v, please provide the correct value of -name args", *experimentName)

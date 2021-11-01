@@ -13,7 +13,7 @@ spec:
       labels: 
         app: litmus-experiment
     spec:
-      serviceAccountName: vmware-process-kill-sa
+      serviceAccountName: vmware-run-script-sa
       containers:
       - name: gotest
         image: busybox 

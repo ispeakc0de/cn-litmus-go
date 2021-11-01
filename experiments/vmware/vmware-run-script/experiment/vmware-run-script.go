@@ -3,11 +3,9 @@ package experiment
 import (
 	"os"
 
-	litmusLIB "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-process-kill/lib"
-	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
-	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/environment"
-	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-process-kill/types"
-	"github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
+	litmusLIB "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-run-script/lib"
+	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-run-script/environment"
+	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-run-script/types"
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/events"
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -20,7 +18,7 @@ import (
 )
 
 // Experiment contains steps to inject chaos
-func VMWareProcessKill(clients clients.ClientSets) {
+func Experiment(clients clients.ClientSets) {
 
 	experimentsDetails := experimentTypes.ExperimentDetails{}
 	resultDetails := types.ResultDetails{}
@@ -62,29 +60,39 @@ func VMWareProcessKill(clients clients.ClientSets) {
 	types.SetResultEventAttributes(&eventsDetails, types.AwaitedVerdict, msg, "Normal", &resultDetails)
 	events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosResult")
 
+	//DISPLAY THE APP INFORMATION
+	log.InfoWithValues("[Info]: The application information is as follows", logrus.Fields{
+		"Namespace":      experimentsDetails.AppNS,
+		"Label":          experimentsDetails.AppLabel,
+		"Chaos Duration": experimentsDetails.ChaosDuration,
+	})
+
 	// Calling AbortWatcher go routine, it will continuously watch for the abort signal and generate the required events and result
 	go common.AbortWatcher(experimentsDetails.ExperimentName, clients, &resultDetails, &chaosDetails, &eventsDetails)
 
-	//DISPLAY THE APP INFORMATION
-	log.InfoWithValues("[Info]: The application information is as follows", logrus.Fields{
-		"App Namespace": experimentsDetails.AppNS,
-		"AppLabel":      experimentsDetails.AppLabel,
-		"Ramp Time":     experimentsDetails.RampTime,
-	})
-
-	//DISPLAY THE PROCESS INFORMATION
-	log.InfoWithValues("The process information is as follows", logrus.Fields{
-		"VM Name":     experimentsDetails.VMName,
-		"Process IDs": experimentsDetails.ProcessIds,
-	})
+	// ADD A PRE-CHAOS CHECK OF YOUR CHOICE HERE
+	// POD STATUS CHECKS FOR THE APPLICATION UNDER TEST AND AUXILIARY APPLICATIONS ARE ADDED BY DEFAULT
 
 	//PRE-CHAOS APPLICATION STATUS CHECK
 	log.Info("[Status]: Verify that the AUT (Application Under Test) is running (pre-chaos)")
 	if err := status.AUTStatusCheck(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.TargetContainer, experimentsDetails.Timeout, experimentsDetails.Delay, clients, &chaosDetails); err != nil {
 		log.Errorf("Application status check failed, err: %v", err)
 		failStep := "Verify that the AUT (Application Under Test) is running (pre-chaos)"
+		types.SetEngineEventAttributes(&eventsDetails, types.PreChaosCheck, "AUT: Not Running", "Warning", &chaosDetails)
+		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 		return
+	}
+
+	//PRE-CHAOS AUXILIARY APPLICATION STATUS CHECK
+	if experimentsDetails.AuxiliaryAppInfo != "" {
+		log.Info("[Status]: Verify that the Auxiliary Applications are running (pre-chaos)")
+		if err := status.CheckAuxiliaryApplicationStatus(experimentsDetails.AuxiliaryAppInfo, experimentsDetails.Timeout, experimentsDetails.Delay, clients); err != nil {
+			log.Errorf("Auxiliary Application status check failed, err: %v", err)
+			failStep := "Verify that the Auxiliary Applications are running (pre-chaos)"
+			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+			return
+		}
 	}
 
 	if experimentsDetails.EngineName != "" {
@@ -110,50 +118,36 @@ func VMWareProcessKill(clients clients.ClientSets) {
 		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 	}
 
-	//PRE-CHAOS AUXILIARY APPLICATION STATUS CHECK
-	if experimentsDetails.AuxiliaryAppInfo != "" {
-		log.Info("[Status]: Verify that the Auxiliary Applications are running (pre-chaos)")
-		if err := status.CheckAuxiliaryApplicationStatus(experimentsDetails.AuxiliaryAppInfo, experimentsDetails.Timeout, experimentsDetails.Delay, clients); err != nil {
-			log.Errorf("Auxiliary Application status check failed, err: %v", err)
-			failStep := "Verify that the Auxiliary Applications are running (pre-chaos)"
-			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
-			return
-		}
-	}
-
-	//Verify that the VM is connected and powered-on and the target processes exist in the VM (pre-chaos)
-	log.Info("[Status]: Verify that the processes exist on VM (pre-chaos)")
-	if err := vmware.ProcessStateCheck(experimentsDetails.VMName, experimentsDetails.ProcessIds, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
-		log.Errorf("vmware process state check failed pre chaos, err: %v", err)
-		failStep := "Verify the processes exist on the vm (pre-chaos)"
-		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
-		return
-	}
+	// INVOKE THE CHAOSLIB OF YOUR CHOICE HERE, WHICH WILL CONTAIN
+	// THE BUSINESS LOGIC OF THE ACTUAL CHAOS
+	// IT CAN BE A NEW CHAOSLIB YOU HAVE CREATED SPECIALLY FOR THIS EXPERIMENT OR ANY EXISTING ONE
 
 	// Including the litmus lib
 	switch experimentsDetails.ChaosLib {
 	case "litmus":
-		if err := litmusLIB.PrepareProcessKill(&experimentsDetails, clients, &resultDetails, &eventsDetails, &chaosDetails); err != nil {
+		if err := litmusLIB.PrepareChaos(&experimentsDetails, clients, &resultDetails, &eventsDetails, &chaosDetails); err != nil {
 			failStep := "failed in chaos injection phase"
 			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 			log.Errorf("Chaos injection failed, err: %v", err)
 			return
 		}
 	default:
-		log.Error("[Invalid]: Please provide the correct LIB")
-		failStep := "no match found for specified lib"
+		failStep := "lib and container-runtime combination not supported!"
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+		log.Error("lib and container-runtime combination not supported, provide the correct value of lib & container-runtime")
 		return
 	}
 
-	log.Infof("[Confirmation]: %v chaos has been injected successfully", experimentsDetails.ExperimentName)
-	resultDetails.Verdict = v1alpha1.ResultVerdictPassed
+	// ADD A POST-CHAOS CHECK OF YOUR CHOICE HERE
+	// POD STATUS CHECKS FOR THE APPLICATION UNDER TEST AND AUXILIARY APPLICATIONS ARE ADDED BY DEFAULT
 
 	//POST-CHAOS APPLICATION STATUS CHECK
 	log.Info("[Status]: Verify that the AUT (Application Under Test) is running (post-chaos)")
 	if err := status.AUTStatusCheck(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.TargetContainer, experimentsDetails.Timeout, experimentsDetails.Delay, clients, &chaosDetails); err != nil {
 		log.Errorf("Application status check failed, err: %v", err)
 		failStep := "Verify that the AUT (Application Under Test) is running (post-chaos)"
+		types.SetEngineEventAttributes(&eventsDetails, types.PostChaosCheck, "AUT: Not Running", "Warning", &chaosDetails)
+		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 		return
 	}

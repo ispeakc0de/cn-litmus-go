@@ -7,6 +7,7 @@ require (
 	github.com/litmuschaos/litmus-go v0.0.0-20211001050128-f598a43c6654
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
+	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.3
 )
 

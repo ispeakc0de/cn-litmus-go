@@ -1,0 +1,35 @@
+apiVersion: litmuchaos.io/v1alpha1
+kind: ChartServiceVersion
+metadata:
+  name: vmware-run-script 
+  version: 0.1.0
+  annotations:
+    categories: vmware
+spec:
+  displayName: vmware-run-script 
+  categoryDescription: >
+    VMWare Run Script experiment injects chaos into the target VMs by means of any shell script, which is executed within the target VMs 
+  keywords: 
+    - "VMs" 
+    - "kubernetes" 
+    - "vmware" 
+    - "script"
+  platforms: 
+    - "Minikube"
+  maturity: alpha
+  maintainers: 
+    - name: Neelanjan Manna 
+      email: neelanjan@chaosnative.com 
+  minKubeVersion: 1.12.0 
+  provider: 
+    name: ChaosNative
+  labels:
+    app.kubernetes.io/component: chartserviceversion
+    app.kubernetes.io/version: latest
+  links: 
+    - name: Documentation 
+      url: https://docs.litmuschaos.io/docs/getstarted/ 
+  icon:
+    - url: 
+      mediatype: ""
+  chaosexpcrdlink: https://raw.githubusercontent.com/litmuschaos/chaos-charts/master/charts/vmware/vmware-run-script/experiment.yaml

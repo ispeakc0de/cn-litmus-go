@@ -1,0 +1,5 @@
+packageName: vmware
+experiments:
+  - name: vmware-run-script
+    CSV: vmware-run-script.chartserviceversion.yaml
+    desc: "vmware-run-script"
