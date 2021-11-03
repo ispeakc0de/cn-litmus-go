@@ -61,6 +61,7 @@ func GetVMState(vmName string) (string, string, error) {
 	return vmStatus.VirtualMachines[0].Summary.Runtime.ConnectionState, vmStatus.VirtualMachines[0].Summary.Runtime.PowerState, nil
 }
 
+// VMStateCheck verifies the steady state of the target VMs
 func VMStateCheck(vmNames string) error {
 
 	vmNameList := strings.Split(vmNames, ",")
