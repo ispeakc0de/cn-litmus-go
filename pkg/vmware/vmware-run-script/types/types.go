@@ -23,8 +23,11 @@ type ExperimentDetails struct {
 	Timeout          int
 	Delay            int
 	TargetContainer  string
+	Sequence         string
 	SourceDir        string
 	DestinationDir   string
 	ScriptFileName   string
 	VMNames          string
+	VMUserName       string
+	VMPassword       string
 }

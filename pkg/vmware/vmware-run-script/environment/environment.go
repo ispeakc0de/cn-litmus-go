@@ -29,10 +29,13 @@ func GetENV(experimentDetails *experimentTypes.ExperimentDetails) {
 	experimentDetails.Delay, _ = strconv.Atoi(common.Getenv("STATUS_CHECK_DELAY", "2"))
 	experimentDetails.Timeout, _ = strconv.Atoi(common.Getenv("STATUS_CHECK_TIMEOUT", "180"))
 	experimentDetails.TargetContainer = common.Getenv("TARGET_CONTAINER", "")
+	experimentDetails.Sequence = common.Getenv("SEQUENCE", "parallel")
 	experimentDetails.SourceDir = common.Getenv("SOURCE_DIRECTORY", "")
 	experimentDetails.DestinationDir = common.Getenv("DESTINATION_DIRECTORY", "")
 	experimentDetails.ScriptFileName = common.Getenv("SCRIPT_FILE_NAME", "")
 	experimentDetails.VMNames = common.Getenv("VM_NAMES", "")
+	experimentDetails.VMUserName = common.Getenv("VM_USER_NAME", "")
+	experimentDetails.VMPassword = common.Getenv("VM_PASSWORD", "")
 }
 
 //InitialiseChaosVariables initialise all the global variables
