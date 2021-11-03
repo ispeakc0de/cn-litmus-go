@@ -12,6 +12,7 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 
 	vmwareDiskLoss "github.com/chaosnative/litmus-go/experiments/vmware/vmware-disk-loss/experiment"
+	vmwareRunScript "github.com/chaosnative/litmus-go/experiments/vmware/vmware-run-script/experiment"
 
 	"github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -46,6 +47,8 @@ func main() {
 	switch *experimentName {
 	case "vmware-disk-loss":
 		vmwareDiskLoss.VMWareDiskLoss(clients)
+	case "vmware-run-script":
+		vmwareRunScript.VMWareRunScript(clients)
 
 	default:
 		log.Errorf("Unsupported -name %v, please provide the correct value of -name args", *experimentName)

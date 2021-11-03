@@ -4,8 +4,10 @@ import (
 	"os"
 
 	litmusLIB "github.com/chaosnative/litmus-go/chaoslib/litmus/vmware-run-script/lib"
+	"github.com/chaosnative/litmus-go/pkg/cloud/vmware"
 	experimentEnv "github.com/chaosnative/litmus-go/pkg/vmware/vmware-run-script/environment"
 	experimentTypes "github.com/chaosnative/litmus-go/pkg/vmware/vmware-run-script/types"
+	"github.com/litmuschaos/chaos-operator/pkg/apis/litmuschaos/v1alpha1"
 	clients "github.com/litmuschaos/litmus-go/pkg/clients"
 	"github.com/litmuschaos/litmus-go/pkg/events"
 	"github.com/litmuschaos/litmus-go/pkg/log"
@@ -17,8 +19,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Experiment contains steps to inject chaos
-func Experiment(clients clients.ClientSets) {
+// VMWareRunScript contains steps to inject chaos
+func VMWareRunScript(clients clients.ClientSets) {
 
 	experimentsDetails := experimentTypes.ExperimentDetails{}
 	resultDetails := types.ResultDetails{}
@@ -60,26 +62,26 @@ func Experiment(clients clients.ClientSets) {
 	types.SetResultEventAttributes(&eventsDetails, types.AwaitedVerdict, msg, "Normal", &resultDetails)
 	events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosResult")
 
-	//DISPLAY THE APP INFORMATION
-	log.InfoWithValues("[Info]: The application information is as follows", logrus.Fields{
-		"Namespace":      experimentsDetails.AppNS,
-		"Label":          experimentsDetails.AppLabel,
-		"Chaos Duration": experimentsDetails.ChaosDuration,
-	})
-
 	// Calling AbortWatcher go routine, it will continuously watch for the abort signal and generate the required events and result
 	go common.AbortWatcher(experimentsDetails.ExperimentName, clients, &resultDetails, &chaosDetails, &eventsDetails)
 
-	// ADD A PRE-CHAOS CHECK OF YOUR CHOICE HERE
-	// POD STATUS CHECKS FOR THE APPLICATION UNDER TEST AND AUXILIARY APPLICATIONS ARE ADDED BY DEFAULT
+	//DISPLAY THE APP INFORMATION
+	log.InfoWithValues("[Info]: The application information is as follows", logrus.Fields{
+		"App Namespace": experimentsDetails.AppNS,
+		"AppLabel":      experimentsDetails.AppLabel,
+		"Ramp Time":     experimentsDetails.RampTime,
+	})
+
+	//DISPLAY THE VM INFORMATION
+	log.InfoWithValues("The VM information is as follows", logrus.Fields{
+		"VM Names": experimentsDetails.VMNames,
+	})
 
 	//PRE-CHAOS APPLICATION STATUS CHECK
 	log.Info("[Status]: Verify that the AUT (Application Under Test) is running (pre-chaos)")
 	if err := status.AUTStatusCheck(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.TargetContainer, experimentsDetails.Timeout, experimentsDetails.Delay, clients, &chaosDetails); err != nil {
 		log.Errorf("Application status check failed, err: %v", err)
 		failStep := "Verify that the AUT (Application Under Test) is running (pre-chaos)"
-		types.SetEngineEventAttributes(&eventsDetails, types.PreChaosCheck, "AUT: Not Running", "Warning", &chaosDetails)
-		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 		return
 	}
@@ -118,9 +120,13 @@ func Experiment(clients clients.ClientSets) {
 		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 	}
 
-	// INVOKE THE CHAOSLIB OF YOUR CHOICE HERE, WHICH WILL CONTAIN
-	// THE BUSINESS LOGIC OF THE ACTUAL CHAOS
-	// IT CAN BE A NEW CHAOSLIB YOU HAVE CREATED SPECIALLY FOR THIS EXPERIMENT OR ANY EXISTING ONE
+	//Verify the VM is in steady state pre-chaos
+	if err := vmware.VMStateCheck(experimentsDetails.VMNames); err != nil {
+		log.Errorf("VM status check failed pre chaos, err: %v", err)
+		failStep := "Verify the VM is in steady state (pre-chaos)"
+		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+		return
+	}
 
 	// Including the litmus lib
 	switch experimentsDetails.ChaosLib {
@@ -138,16 +144,14 @@ func Experiment(clients clients.ClientSets) {
 		return
 	}
 
-	// ADD A POST-CHAOS CHECK OF YOUR CHOICE HERE
-	// POD STATUS CHECKS FOR THE APPLICATION UNDER TEST AND AUXILIARY APPLICATIONS ARE ADDED BY DEFAULT
+	log.Infof("[Confirmation]: %v chaos has been injected successfully", experimentsDetails.ExperimentName)
+	resultDetails.Verdict = v1alpha1.ResultVerdictPassed
 
 	//POST-CHAOS APPLICATION STATUS CHECK
 	log.Info("[Status]: Verify that the AUT (Application Under Test) is running (post-chaos)")
 	if err := status.AUTStatusCheck(experimentsDetails.AppNS, experimentsDetails.AppLabel, experimentsDetails.TargetContainer, experimentsDetails.Timeout, experimentsDetails.Delay, clients, &chaosDetails); err != nil {
 		log.Errorf("Application status check failed, err: %v", err)
 		failStep := "Verify that the AUT (Application Under Test) is running (post-chaos)"
-		types.SetEngineEventAttributes(&eventsDetails, types.PostChaosCheck, "AUT: Not Running", "Warning", &chaosDetails)
-		events.GenerateEvents(&eventsDetails, clients, &chaosDetails, "ChaosEngine")
 		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 		return
 	}
@@ -161,6 +165,14 @@ func Experiment(clients clients.ClientSets) {
 			result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
 			return
 		}
+	}
+
+	//Verify the VM is in steady state post-chaos
+	if err := vmware.VMStateCheck(experimentsDetails.VMNames); err != nil {
+		log.Errorf("VM status check failed post chaos, err: %v", err)
+		failStep := "Verify the VM is in steady state (post-chaos)"
+		result.RecordAfterFailure(&chaosDetails, &resultDetails, failStep, clients, &eventsDetails)
+		return
 	}
 
 	if experimentsDetails.EngineName != "" {

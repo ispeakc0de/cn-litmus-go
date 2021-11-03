@@ -3,6 +3,7 @@ package vmware
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/chaosnative/litmus-go/pkg/utils"
 	"github.com/pkg/errors"
@@ -58,4 +59,34 @@ func GetVMState(vmName string) (string, string, error) {
 	json.Unmarshal([]byte(stdout), &vmStatus)
 
 	return vmStatus.VirtualMachines[0].Summary.Runtime.ConnectionState, vmStatus.VirtualMachines[0].Summary.Runtime.PowerState, nil
+}
+
+func VMStateCheck(vmNames string) error {
+
+	vmNameList := strings.Split(vmNames, ",")
+	if len(vmNameList) == 0 {
+		return errors.Errorf("no vm name found")
+	}
+
+	for _, vmName := range vmNameList {
+
+		if err := GetVM(vmName); err != nil {
+			return errors.Errorf("vm %s not found, err: %s", vmName, err.Error())
+		}
+
+		connectionState, powerState, err := GetVMState(vmName)
+		if err != nil {
+			return errors.Errorf("unable to fetch vm %s state, err: %s", vmName, err.Error())
+		}
+
+		if connectionState != "connected" {
+			return errors.Errorf("vm %s is not in connected state", vmName)
+		}
+
+		if powerState != "poweredOn" {
+			return errors.Errorf("vm %s is not in powered-on state", vmName)
+		}
+	}
+
+	return nil
 }
