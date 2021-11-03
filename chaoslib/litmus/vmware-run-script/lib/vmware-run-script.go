@@ -84,6 +84,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 
 			wg.Add(1)
 
+			// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
 			_, err := executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 			if <-err != nil {
 				return errors.Errorf("failed to execute the script in %s vm: %s", vmName, (<-err).Error())
@@ -99,6 +100,8 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 			}
 
 			wg.Wait()
+
+			common.SetTargets(vmName, "reverted", "Script", chaosDetails)
 
 			//Wait for chaos duration
 			log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
@@ -140,6 +143,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 
 		wg.Add(1)
 
+		// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
 		_, err := executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 		if <-err != nil {
 			return errors.Errorf("failed to execute the script in %s vm: %s", vmName, (<-err).Error())
@@ -156,6 +160,11 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 	}
 
 	wg.Wait()
+
+	for _, vmName := range vmNameList {
+
+		common.SetTargets(vmName, "reverted", "Script", chaosDetails)
+	}
 
 	//Wait for chaos interval
 	log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
