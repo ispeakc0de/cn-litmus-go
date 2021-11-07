@@ -18,6 +18,8 @@ import (
 )
 
 var wg sync.WaitGroup
+var chanErr <-chan error
+var chanErrVmName string
 
 // PrepareScriptChaos contains the prepration and injection steps for the experiment
 func PrepareScriptChaos(experimentsDetails *experimentTypes.ExperimentDetails, clients clients.ClientSets, resultDetails *types.ResultDetails, eventsDetails *types.EventDetails, chaosDetails *types.ChaosDetails) error {
@@ -85,10 +87,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 			wg.Add(1)
 
 			// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
-			_, err := executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
-			if <-err != nil {
-				return errors.Errorf("failed to execute the script in %s vm: %s", vmName, (<-err).Error())
-			}
+			_, chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 
 			common.SetTargets(vmName, "injected", "Script", chaosDetails)
 
@@ -100,6 +99,10 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 			}
 
 			wg.Wait()
+
+			if <-chanErr != nil {
+				return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, (<-chanErr).Error())
+			}
 
 			common.SetTargets(vmName, "reverted", "Script", chaosDetails)
 
@@ -144,10 +147,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 		wg.Add(1)
 
 		// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
-		_, err := executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
-		if <-err != nil {
-			return errors.Errorf("failed to execute the script in %s vm: %s", vmName, (<-err).Error())
-		}
+		_, chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 
 		common.SetTargets(vmName, "injected", "Script", chaosDetails)
 	}
@@ -160,6 +160,10 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 	}
 
 	wg.Wait()
+
+	if <-chanErr != nil {
+		return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, (<-chanErr).Error())
+	}
 
 	for _, vmName := range vmNameList {
 
@@ -184,7 +188,7 @@ func getFilePath(dirPath, fileName string) string {
 }
 
 // executeScript performs the chaos script execution in the target VM as a goroutine
-func executeScript(vmName, destDir, scriptName, timeout, vmUserName, vmPassword string) (<-chan string, <-chan error) {
+func executeScript(vmName, destDir, scriptName, timeout, vmUserName, vmPassword string) (<-chan string, string, <-chan error) {
 
 	chanErr := make(chan error)
 	chanOutput := make(chan string)
@@ -201,5 +205,5 @@ func executeScript(vmName, destDir, scriptName, timeout, vmUserName, vmPassword 
 		wg.Done()
 	}()
 
-	return chanOutput, chanErr
+	return chanOutput, vmName, chanErr
 }
