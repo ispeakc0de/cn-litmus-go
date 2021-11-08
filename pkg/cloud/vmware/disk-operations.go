@@ -19,7 +19,7 @@ func DiskDetach(vcenterServer, appVMMoid, diskId, cookie string) error {
 
 	req, err := http.NewRequest("DELETE", "https://"+vcenterServer+"/rest/vcenter/vm/"+appVMMoid+"/hardware/disk/"+diskId, nil)
 	if err != nil {
-		return errors.Errorf(err.Error())
+		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -31,7 +31,7 @@ func DiskDetach(vcenterServer, appVMMoid, diskId, cookie string) error {
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.Errorf(err.Error())
+		return err
 	}
 
 	defer resp.Body.Close()
@@ -41,7 +41,7 @@ func DiskDetach(vcenterServer, appVMMoid, diskId, cookie string) error {
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return errors.Errorf(err.Error())
+			return err
 		}
 
 		if err = json.Unmarshal(body, &errorResponse); err != nil {
@@ -70,8 +70,9 @@ func DiskAttach(vcenterServer, appVMMoid, diskPath, cookie string) error {
 
 	req, err := http.NewRequest("POST", "https://"+vcenterServer+"/rest/vcenter/vm/"+appVMMoid+"/hardware/disk", bytes.NewBuffer([]byte(jsonString)))
 	if err != nil {
-		return errors.Errorf(err.Error())
+		return err
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Cookie", cookie)
 	tr := &http.Transport{
@@ -81,14 +82,14 @@ func DiskAttach(vcenterServer, appVMMoid, diskPath, cookie string) error {
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.Errorf(err.Error())
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Errorf(err.Error())
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -127,7 +128,7 @@ func GetDiskPath(vcenterServer, appVMMoid, diskId, cookie string) (string, error
 
 	req, err := http.NewRequest("GET", "https://"+vcenterServer+"/rest/vcenter/vm/"+appVMMoid+"/hardware/disk/"+diskId, nil)
 	if err != nil {
-		return "", errors.Errorf(err.Error())
+		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -139,14 +140,14 @@ func GetDiskPath(vcenterServer, appVMMoid, diskId, cookie string) (string, error
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", errors.Errorf(err.Error())
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.Errorf(err.Error())
+		return "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {

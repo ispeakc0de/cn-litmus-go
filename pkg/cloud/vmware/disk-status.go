@@ -74,7 +74,7 @@ func GetDiskState(vcenterServer, appVMMoid, diskId, cookie string) (string, erro
 
 	req, err := http.NewRequest("GET", "https://"+vcenterServer+"/rest/vcenter/vm/"+appVMMoid+"/hardware/disk/", nil)
 	if err != nil {
-		return "", errors.Errorf(err.Error())
+		return "", err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -86,14 +86,14 @@ func GetDiskState(vcenterServer, appVMMoid, diskId, cookie string) (string, erro
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", errors.Errorf(err.Error())
+		return "", err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.Errorf(err.Error())
+		return "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
