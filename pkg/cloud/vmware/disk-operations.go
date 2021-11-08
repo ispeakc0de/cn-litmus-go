@@ -44,7 +44,9 @@ func DiskDetach(vcenterServer, appVMMoid, diskId, cookie string) error {
 			return errors.Errorf(err.Error())
 		}
 
-		json.Unmarshal(body, &errorResponse)
+		if err = json.Unmarshal(body, &errorResponse); err != nil {
+			return err
+		}
 
 		return errors.Errorf("error during disk detachment: %s", errorResponse.MsgValue.MsgMessages[0].MsgDefaultMessage)
 	}
@@ -92,13 +94,17 @@ func DiskAttach(vcenterServer, appVMMoid, diskPath, cookie string) error {
 	if resp.StatusCode != http.StatusOK {
 		var errorResponse vmwareLib.ErrorResponse
 
-		json.Unmarshal(body, &errorResponse)
+		if err = json.Unmarshal(body, &errorResponse); err != nil {
+			return err
+		}
 
 		return errors.Errorf("error during disk attachment: %s", errorResponse.MsgValue.MsgMessages[0].MsgDefaultMessage)
 	}
 
 	var response AttachDiskResponse
-	json.Unmarshal(body, &response)
+	if err = json.Unmarshal(body, &response); err != nil {
+		return err
+	}
 
 	log.InfoWithValues("Attached disk having:", logrus.Fields{
 		"VM ID":   appVMMoid,
@@ -146,13 +152,17 @@ func GetDiskPath(vcenterServer, appVMMoid, diskId, cookie string) (string, error
 	if resp.StatusCode != http.StatusOK {
 		var errorResponse vmwareLib.ErrorResponse
 
-		json.Unmarshal(body, &errorResponse)
+		if err = json.Unmarshal(body, &errorResponse); err != nil {
+			return "", err
+		}
 
 		return "", errors.Errorf("error during disk information fetch: %s", errorResponse.MsgValue.MsgMessages[0].MsgDefaultMessage)
 	}
 
 	var diskInfo DiskInfo
-	json.Unmarshal(body, &diskInfo)
+	if err = json.Unmarshal(body, &diskInfo); err != nil {
+		return "", err
+	}
 
 	return diskInfo.MsgValue.MsgBacking.MsgVMDKFile, nil
 }

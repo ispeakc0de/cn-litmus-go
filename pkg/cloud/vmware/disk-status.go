@@ -99,13 +99,17 @@ func GetDiskState(vcenterServer, appVMMoid, diskId, cookie string) (string, erro
 	if resp.StatusCode != http.StatusOK {
 		var errorResponse vmwareLib.ErrorResponse
 
-		json.Unmarshal(body, &errorResponse)
+		if err = json.Unmarshal(body, &errorResponse); err != nil {
+			return "", err
+		}
 
 		return "", errors.Errorf("error during disk state fetch: %s", errorResponse.MsgValue.MsgMessages[0].MsgDefaultMessage)
 	}
 
 	var diskList DiskList
-	json.Unmarshal(body, &diskList)
+	if err = json.Unmarshal(body, &diskList); err != nil {
+		return "", err
+	}
 
 	for _, disk := range diskList.MsgValue {
 
