@@ -24,3 +24,5 @@ FROM litmuschaos/experiment-alpine
 LABEL maintainer="ChaosNative"
 
 COPY --from=builder /output/ /litmus
+
+COPY --from=builder /usr/local/bin/govc /usr/local/bin/govc
