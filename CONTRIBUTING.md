@@ -5,13 +5,13 @@ Litmus is an Apache 2.0 Licensed project and uses the standard GitHub pull reque
 There are several areas of Litmus that could use your help. For starters, you could help in improving the sections in this document by either creating a new issue describing the improvement or submitting a pull request to this repository. 
 
 -   If you are a first-time contributor, please see [Steps to Contribute](#steps-to-contribute).
--   If you would like to suggest new tests to be added to litmus, please go ahead and [create a new issue](https://github.com/litmuschaos/litmus/issues/new) describing your test. All you need to do is  specify the workload type and the operations that you would like to perform on the workload.
+-   If you would like to suggest new tests to be added to litmus, please go ahead and [create a new issue](https://github.com/chaonative/litmus-go/issues/new) describing your test. All you need to do is  specify the workload type and the operations that you would like to perform on the workload.
 -   If you would like to work on something more involved, please connect with the Litmus Contributors. 
 -   If you would like to make code contributions, all your commits should be signed with Developer Certificate of Origin. See [Sign your work](#sign-your-work). 
 
 ## Steps to Contribute
 
--   Find an issue to work on or create a new issue. The issues are maintained at [litmuschaos/litmus](https://github.com/litmuschaos/litmus/issues). You can pick up from a list of [good-first-issues](https://github.com/litmuschaos/litmus/labels/good%20first%20issue).
+-   Find an issue to work on or create a new issue. The issues are maintained at [chaosnative/litmus-go](https://github.com/chaosnative/litmus-go/issues). You can pick up from a list of [good-first-issues](https://github.comchaosnative/litmus-go/labels/good%20first%20issue).
 -   Claim your issue by commenting your intent to work on it to avoid duplication of efforts. 
 -   Fork the repository on GitHub.
 -   Create a branch from where you want to base your work (usually master).

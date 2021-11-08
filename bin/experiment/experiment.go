@@ -32,7 +32,7 @@ func main() {
 	clients := clients.ClientSets{}
 
 	// parse the experiment name
-	experimentName := flag.String("name", "pod-delete", "name of the chaos experiment")
+	experimentName := flag.String("name", "vmware-disk-loss", "name of the chaos experiment")
 
 	//Getting kubeConfig and Generate ClientSets
 	if err := clients.GenerateClientSetFromKubeConfig(); err != nil {

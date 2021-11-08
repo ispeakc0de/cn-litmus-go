@@ -119,17 +119,17 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 		for i := range diskIdList {
 
 			//Detaching the disk from the vm
-			log.Info("[Chaos]: Detaching the disk from the VM")
+			log.Infof("[Chaos]: Detaching %s disk from VM", diskIdList[i])
 			if err = vmware.DiskDetach(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie); err != nil {
-				return errors.Errorf("disk detachment failed, err: %v", err)
+				return errors.Errorf("%s disk detachment failed, err: %v", diskIdList[i], err)
 			}
 
 			common.SetTargets(diskIdList[i], "injected", "Disk", chaosDetails)
 
 			//Wait for disk detachment
-			log.Infof("[Wait]: Wait for disk detachment for disk %v", diskIdList[i])
+			log.Infof("[Wait]: Wait for disk detachment for %v disk", diskIdList[i])
 			if err = vmware.WaitForDiskDetachment(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
-				return errors.Errorf("unable to detach the disk from the vm, err: %v", err)
+				return errors.Errorf("unable to detach %s disk from the vm, err: %v", diskIdList[i], err)
 			}
 
 			// run the probes during chaos
@@ -147,23 +147,23 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 			//Getting the disk attachment status
 			diskState, err := vmware.GetDiskState(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie)
 			if err != nil {
-				return errors.Errorf("failed to get the disk status, err: %v", err)
+				return errors.Errorf("failed to get %s disk status, err: %v", diskIdList[i], err)
 			}
 
 			switch diskState {
 			case "attached":
-				log.Info("[Skip]: The disk is already attached")
+				log.Infof("[Skip]: %s disk is already attached", diskIdList[i])
 			default:
 				//Attaching the disk to the vm
-				log.Info("[Chaos]: Attaching the disk to the VM")
+				log.Infof("[Chaos]: Attaching %s disk to the VM", diskIdList[i])
 				if err = vmware.DiskAttach(experimentsDetails.VcenterServer, appVMMoidList[i], diskPathList[i], cookie); err != nil {
-					return errors.Errorf("disk attachment failed, err: %v", err)
+					return errors.Errorf("%s disk attachment failed, err: %v", diskIdList[i], err)
 				}
 
 				//Wait for disk attachment
-				log.Infof("[Wait]: Wait for disk attachment for disk %v", diskIdList[i])
+				log.Infof("[Wait]: Wait for %s disk attachment", diskIdList[i])
 				if err = vmware.WaitForDiskAttachment(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
-					return errors.Errorf("unable to attach the disk to the vm, err: %v", err)
+					return errors.Errorf("unable to attach %s disk to the vm in the given time duration, err: %v", diskIdList[i], err)
 				}
 			}
 			common.SetTargets(diskIdList[i], "reverted", "Disk", chaosDetails)
@@ -191,9 +191,9 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 		for i := range diskIdList {
 
 			//Detaching the disk from the vm
-			log.Info("[Chaos]: Detaching the disk from the vm")
+			log.Infof("[Chaos]: Detaching %s disk from the vm", diskIdList[i])
 			if err = vmware.DiskDetach(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie); err != nil {
-				return errors.Errorf("disk detachment failed, err: %v", err)
+				return errors.Errorf("%s disk detachment failed, err: %v", diskIdList[i], err)
 			}
 
 			common.SetTargets(diskIdList[i], "injected", "Disk", chaosDetails)
@@ -202,9 +202,9 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 		for i := range diskIdList {
 
 			//Wait for disk detachment
-			log.Infof("[Wait]: Wait for disk detachment for disk %v", diskIdList[i])
+			log.Infof("[Wait]: Wait for %s disk detachment", diskIdList[i])
 			if err = vmware.WaitForDiskDetachment(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
-				return errors.Errorf("unable to detach the disk from the vm, err: %v", err)
+				return errors.Errorf("unable to detach %s disk from the vm, err: %v", diskIdList[i], err)
 			}
 		}
 
@@ -224,23 +224,23 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 			//Getting the disk attachment status
 			diskState, err := vmware.GetDiskState(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie)
 			if err != nil {
-				return errors.Errorf("failed to get the disk status, err: %v", err)
+				return errors.Errorf("failed to get %s disk status, err: %v", diskIdList[i], err)
 			}
 
 			switch diskState {
 			case "attached":
-				log.Info("[Skip]: The disk is already attached")
+				log.Infof("[Skip]: %s disk is already attached", diskIdList[i])
 			default:
 				//Attaching the disk to the vm
-				log.Info("[Chaos]: Attaching the disk to the VM")
+				log.Infof("[Chaos]: Attaching %s disk to the VM", diskIdList[i])
 				if err = vmware.DiskAttach(experimentsDetails.VcenterServer, appVMMoidList[i], diskPathList[i], cookie); err != nil {
-					return errors.Errorf("disk attachment failed, err: %v", err)
+					return errors.Errorf("%s disk attachment failed, err: %v", diskIdList[i], err)
 				}
 
 				//Wait for disk attachment
-				log.Infof("[Wait]: Wait for disk attachment for disk %v", diskIdList[i])
+				log.Infof("[Wait]: Wait for %s disk attachment", diskIdList[i])
 				if err = vmware.WaitForDiskAttachment(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
-					return errors.Errorf("unable to attach the disk to the vm, err: %v", err)
+					return errors.Errorf("unable to attach %s disk to the vm, err: %v", diskIdList[i], err)
 				}
 			}
 			common.SetTargets(diskIdList[i], "reverted", "Disk", chaosDetails)
@@ -262,25 +262,25 @@ func AbortWatcher(experimentsDetails *experimentTypes.ExperimentDetails, appVMMo
 		//Getting the disk attachment status
 		diskState, err := vmware.GetDiskState(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie)
 		if err != nil {
-			log.Errorf("failed to get the disk state when an abort signal is received, err: %v", err)
+			log.Errorf("failed to get %s disk state when an abort signal is received, err: %v", diskIdList[i], err)
 		}
 
 		if diskState != "attached" {
 
 			//Wait for disk detachment
 			//We first wait for the to get in detached state then we are attaching it.
-			log.Info("[Abort]: Wait for complete disk detachment")
+			log.Infof("[Abort]: Wait for complete disk detachment for %s disk", diskIdList[i])
 
 			if err = vmware.WaitForDiskDetachment(experimentsDetails.VcenterServer, appVMMoidList[i], diskIdList[i], cookie, experimentsDetails.Delay, experimentsDetails.Timeout); err != nil {
-				log.Errorf("unable to detach the disk, err: %v", err)
+				log.Errorf("unable to detach %s disk, err: %v", diskIdList[i], err)
 			}
 
 			//Attaching the disk to the VM
-			log.Info("[Chaos]: Attaching the disk to the VM")
+			log.Infof("[Chaos]: Attaching %s disk to the VM", diskIdList[i])
 
 			err = vmware.DiskAttach(experimentsDetails.VcenterServer, appVMMoidList[i], diskPathList[i], cookie)
 			if err != nil {
-				log.Errorf("disk attachment failed when an abort signal is received, err: %v", err)
+				log.Errorf("%s disk attachment failed when an abort signal is received, err: %v", diskIdList[i], err)
 			}
 		}
 
