@@ -30,4 +30,5 @@ type ExperimentDetails struct {
 	VMNames          string
 	VMUserName       string
 	VMPassword       string
+	ScriptENVs       string
 }

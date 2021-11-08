@@ -36,6 +36,7 @@ func GetENV(experimentDetails *experimentTypes.ExperimentDetails) {
 	experimentDetails.VMNames = common.Getenv("VM_NAMES", "")
 	experimentDetails.VMUserName = common.Getenv("VM_USER_NAME", "")
 	experimentDetails.VMPassword = common.Getenv("VM_PASSWORD", "")
+	experimentDetails.ScriptENVs = common.Getenv("SCRIPT_ENVIRONMENT_VARIABLES", "")
 }
 
 //InitialiseChaosVariables initialise all the global variables

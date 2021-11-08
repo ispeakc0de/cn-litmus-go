@@ -67,6 +67,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 
 	sourceFilePath := getFilePath(experimentsDetails.SourceDir, experimentsDetails.ScriptFileName)
 	destinationFilePath := getFilePath(experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName)
+	envString := getENVString(experimentsDetails.ScriptENVs)
 
 	for duration < experimentsDetails.ChaosDuration {
 
@@ -82,6 +83,12 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 			log.Infof("[Chaos]: Uploading the script to %s VM", vmName)
 			if err := vmware.UploadScript(sourceFilePath, destinationFilePath, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 				return errors.Errorf("failed to upload the script to %s vm, err: %s", vmName, err.Error())
+			}
+
+			//Uploading the environment variables
+			log.Infof("[Chaos]: Uploading the environment variables to %s VM", vmName)
+			if err := vmware.UploadEnvs(experimentsDetails.DestinationDir, envString, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+				return errors.Errorf("failed to upload the envs to %s vm, err: %s", vmName, err.Error())
 			}
 
 			wg.Add(1)
@@ -124,6 +131,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 
 	sourceFilePath := getFilePath(experimentsDetails.SourceDir, experimentsDetails.ScriptFileName)
 	destinationFilePath := getFilePath(experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName)
+	envString := getENVString(experimentsDetails.ScriptENVs)
 
 	for duration < experimentsDetails.ChaosDuration {
 		if experimentsDetails.EngineName != "" {
@@ -139,6 +147,12 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 		log.Infof("[Chaos]: Uploading the script to %s VM", vmName)
 		if err := vmware.UploadScript(sourceFilePath, destinationFilePath, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
 			return errors.Errorf("failed to upload the script to %s vm, err: %s", vmName, err.Error())
+		}
+
+		//Uploading the environment variables
+		log.Infof("[Chaos]: Uploading the environment variables to %s VM", vmName)
+		if err := vmware.UploadEnvs(experimentsDetails.DestinationDir, envString, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+			return errors.Errorf("failed to upload the envs to %s vm, err: %s", vmName, err.Error())
 		}
 	}
 
@@ -206,4 +220,18 @@ func executeScript(vmName, destDir, scriptName, timeout, vmUserName, vmPassword 
 	}()
 
 	return chanOutput, vmName, chanErr
+}
+
+// getENVString returns a newline character seperated string of envs
+func getENVString(scriptENVs string) string {
+
+	envList := strings.Split(scriptENVs, ",")
+
+	envString := ""
+
+	for _, env := range envList {
+		envString += env + "\n"
+	}
+
+	return envString
 }
