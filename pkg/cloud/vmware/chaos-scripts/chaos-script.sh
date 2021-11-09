@@ -1,9 +1,27 @@
 #!/bin/bash
 
+# trap the EXIT signal to delete the script and the envs
 trap "rm chaos-script.sh litmus_environment" EXIT
+
+# add the source file for the envs
 source litmus_environment
 
+# check if all the required envs are present
+if [[ -v InstallDependency ]] ; then
+  echo "InstallDependency ENV not found" && exit;
+elif [[ -v Duration ]] ; then
+  echo "Duration ENV not found" && exit;
+elif [[ -v CPU ]] ; then
+  echo "CPU ENV not found" && exit;
+elif [[ -v Workers ]] ; then
+  echo "Workers ENV not found" && exit;
+elif [[ -v Percentage ]] ; then
+  echo "Percentage ENV not found" && exit;
+fi
+
 export DEBIAN_FRONTEND=noninteractive
+
+# install the dependent packages if required 
 if  [[ "${InstallDependency}" == True ]] ; then
   if [[ "$( which stress-ng 2>/dev/null )" ]] ; then 
     echo "Dependency is already installed." ; 
@@ -35,5 +53,7 @@ fi
 pgrep stress-ng && echo "Another stress-ng command is running, exiting..." && exit;
 
 echo "Initiating CPU stress for ${Duration} seconds..."
+
 stress-ng --cpu ${CPU} --vm ${Workers} --vm-bytes ${Percentage}% --cpu-method matrixprod -t ${Duration}s
+
 echo "Finished resource stress."
