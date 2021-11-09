@@ -134,59 +134,62 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 	envString := getENVString(experimentsDetails.ScriptENVs)
 
 	for duration < experimentsDetails.ChaosDuration {
+
 		if experimentsDetails.EngineName != "" {
 			msg := "Injecting " + experimentsDetails.ExperimentName + " chaos on VM"
 			types.SetEngineEventAttributes(eventsDetails, types.ChaosInject, msg, "Normal", chaosDetails)
 			events.GenerateEvents(eventsDetails, clients, chaosDetails, "ChaosEngine")
 		}
-	}
 
-	for _, vmName := range vmNameList {
+		for _, vmName := range vmNameList {
 
-		//Uploading the script to the target VM
-		log.Infof("[Chaos]: Uploading the script to %s VM", vmName)
-		if err := vmware.UploadScript(sourceFilePath, destinationFilePath, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
-			return errors.Errorf("failed to upload the script to %s vm, err: %s", vmName, err.Error())
+			//Uploading the script to the target VM
+			log.Infof("[Chaos]: Uploading the script to %s VM", vmName)
+			if err := vmware.UploadScript(sourceFilePath, destinationFilePath, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+				return errors.Errorf("failed to upload the script to %s vm, err: %s", vmName, err.Error())
+			}
+
+			//Uploading the environment variables
+			log.Infof("[Chaos]: Uploading the environment variables to %s VM", vmName)
+			if err := vmware.UploadEnvs(experimentsDetails.DestinationDir, envString, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
+				return errors.Errorf("failed to upload the envs to %s vm, err: %s", vmName, err.Error())
+			}
 		}
 
-		//Uploading the environment variables
-		log.Infof("[Chaos]: Uploading the environment variables to %s VM", vmName)
-		if err := vmware.UploadEnvs(experimentsDetails.DestinationDir, envString, vmName, experimentsDetails.VMUserName, experimentsDetails.VMPassword); err != nil {
-			return errors.Errorf("failed to upload the envs to %s vm, err: %s", vmName, err.Error())
+		for _, vmName := range vmNameList {
+
+			wg.Add(1)
+
+			// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
+			_, chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+
+			common.SetTargets(vmName, "injected", "Script", chaosDetails)
 		}
-	}
 
-	for _, vmName := range vmNameList {
-
-		wg.Add(1)
-
-		// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
-		_, chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
-
-		common.SetTargets(vmName, "injected", "Script", chaosDetails)
-	}
-
-	// run the probes during chaos
-	if len(resultDetails.ProbeDetails) != 0 {
-		if err := probe.RunProbes(chaosDetails, clients, resultDetails, "DuringChaos", eventsDetails); err != nil {
-			return err
+		// run the probes during chaos
+		if len(resultDetails.ProbeDetails) != 0 {
+			if err := probe.RunProbes(chaosDetails, clients, resultDetails, "DuringChaos", eventsDetails); err != nil {
+				return err
+			}
 		}
+
+		wg.Wait()
+
+		if <-chanErr != nil {
+			return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, (<-chanErr).Error())
+		}
+
+		for _, vmName := range vmNameList {
+
+			common.SetTargets(vmName, "reverted", "Script", chaosDetails)
+		}
+
+		//Wait for chaos interval
+		log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
+		common.WaitForDuration(experimentsDetails.ChaosInterval)
+
+		duration = int(time.Since(ChaosStartTimeStamp).Seconds())
 	}
-
-	wg.Wait()
-
-	if <-chanErr != nil {
-		return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, (<-chanErr).Error())
-	}
-
-	for _, vmName := range vmNameList {
-
-		common.SetTargets(vmName, "reverted", "Script", chaosDetails)
-	}
-
-	//Wait for chaos interval
-	log.Infof("[Wait]: Waiting for the chaos interval of %vs", experimentsDetails.ChaosInterval)
-	common.WaitForDuration(experimentsDetails.ChaosInterval)
 
 	return nil
 }
