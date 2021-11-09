@@ -1,0 +1,103 @@
+---
+name: Build
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pre-checks:
+    runs-on: ubuntu-latest
+    steps:
+      # Install golang
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      #TODO: Add Dockerfile linting
+      # Running go-lint
+      - name: Checking Go-Lint
+        run : |
+          sudo apt-get update && sudo apt-get install golint
+          make gotasks
+
+      - name: gofmt check
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -ne 0 ]
+          then
+           echo "The following files were found to be not go formatted:"
+           gofmt -s -l .
+           exit 1
+          fi
+          
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1 
+
+  # security:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@master
+  #     - name: Run Snyk to check for vulnerabilities
+  #       uses: snyk/actions/golang@master
+  #       env:
+  #         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  #       with:
+  #         args: --severity-threshold=high
+
+  build:
+    needs: pre-checks
+    runs-on: ubuntu-latest
+    steps:
+      # Install golang
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+          file: build/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          tags: chaosnative/go-runner:ci
+
+  trivy:
+    needs: pre-checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -f build/Dockerfile -t docker.io/chaosnative/go-runner:${{ github.sha }} . --build-arg TARGETARCH=amd64
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/chaosnative/go-runner:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
