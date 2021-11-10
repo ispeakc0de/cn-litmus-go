@@ -45,13 +45,13 @@ func ExecuteScript(destinationDir, fileName, timeoutSeconds, vmName, vmUserName,
 
 	stdout = strings.TrimSuffix(stdout, "\n")
 
-	return stdout, err
+	return stdout, nil
 }
 
 // UploadEnvs creates a file litmus_environment in the target VM which will contain all the environment variables
 func UploadEnvs(destinationDir, envString, vmName, vmUserName, vmPassword string) error {
 
-	command := fmt.Sprintf(`govc guest.run -vm=%s -l=%s:%s -C %s printf "%s" | tee -a litmus_environment`, vmName, vmUserName, vmPassword, destinationDir, envString)
+	command := fmt.Sprintf(`govc guest.run -vm=%s -l=%s:%s -C %s 'printf "%s" | tee -a litmus_environment'`, vmName, vmUserName, vmPassword, destinationDir, envString)
 	_, stderr, err := utils.Shellout(command)
 
 	if err != nil {
