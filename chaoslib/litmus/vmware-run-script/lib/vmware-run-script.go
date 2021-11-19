@@ -94,7 +94,7 @@ func injectChaosInSerialMode(experimentsDetails *experimentTypes.ExperimentDetai
 			wg.Add(1)
 
 			// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
-			_, chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+			chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 
 			common.SetTargets(vmName, "injected", "Script", chaosDetails)
 
@@ -161,7 +161,7 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 			wg.Add(1)
 
 			// script execution is a blocking task, hence it is being carried out in a goroutine to allow the probes to be run simultaenously
-			_, chanErrVmName, chanErr = executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
+			go executeScript(vmName, experimentsDetails.DestinationDir, experimentsDetails.ScriptFileName, strconv.Itoa(experimentsDetails.Timeout), experimentsDetails.VMUserName, experimentsDetails.VMPassword)
 
 			common.SetTargets(vmName, "injected", "Script", chaosDetails)
 		}
@@ -175,9 +175,15 @@ func injectChaosInParallelMode(experimentsDetails *experimentTypes.ExperimentDet
 
 		wg.Wait()
 
-		if <-chanErr != nil {
-			return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, (<-chanErr).Error())
+		for err := range chanErr {
+			if err != nil {
+				return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, err.Error())
+			}
 		}
+
+		// if err := <-chanErr; err != nil {
+		// 	return errors.Errorf("failed to execute the script in %s vm: %s", chanErrVmName, err.Error())
+		// }
 
 		for _, vmName := range vmNameList {
 
@@ -205,24 +211,23 @@ func getFilePath(dirPath, fileName string) string {
 }
 
 // executeScript performs the chaos script execution in the target VM as a goroutine
-func executeScript(vmName, destDir, scriptName, timeout, vmUserName, vmPassword string) (<-chan string, string, <-chan error) {
+func executeScript(vmName, destDir, scriptName, timeout, vmUserName, vmPassword string) (string, <-chan error) {
 
 	chanErr := make(chan error)
-	chanOutput := make(chan string)
+	// := make(chan string)
 
 	go func() {
 
 		//Running the script in the target VM
 		log.Infof("[Chaos]: Running the script in %s VM", vmName)
-		output, err := vmware.ExecuteScript(destDir, scriptName, timeout, vmName, vmUserName, vmPassword)
-
-		chanErr <- err
-		chanOutput <- output
+		_, err := vmware.ExecuteScript(destDir, scriptName, timeout, vmName, vmUserName, vmPassword)
 
 		wg.Done()
+		chanErr <- err
+		//chanOutput <- output
 	}()
 
-	return chanOutput, vmName, chanErr
+	return vmName, chanErr
 }
 
 // getENVString returns a newline character seperated string of envs
